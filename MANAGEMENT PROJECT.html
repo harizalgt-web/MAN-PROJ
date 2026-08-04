@@ -1,0 +1,3365 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budgeting Opening Project</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Polyfill regenerator-runtime & ExcelJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/regenerator-runtime/0.14.1/runtime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    
+    <!-- jsPDF & jsPDF-AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Scoped CSS Khusus untuk menu Data Operasional Bulanan agar tidak berbenturan dengan dashboard utama -->
+    <style>
+        .operasional-view {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #f8fafc;
+            padding: 24px;
+            border-radius: 16px;
+        }
+        .operasional-view .header-op {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .operasional-view .header-op h1 {
+            margin: 0 0 6px 0;
+            font-size: 18pt;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .operasional-view .header-op p {
+            margin: 0;
+            font-size: 9.5pt;
+            color: #93c5fd;
+            font-weight: 400;
+        }
+        .operasional-view .meta-bar {
+            display: table;
+            width: 100%;
+            margin-bottom: 24px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .operasional-view .meta-item {
+            display: table-cell;
+            vertical-align: middle;
+            width: 33.33%;
+        }
+        .operasional-view .meta-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .operasional-view .meta-value {
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .operasional-view .section-title {
+            font-size: 11.5pt;
+            font-weight: 700;
+            color: #1e3a8a;
+            border-left: 4px solid #2563eb;
+            padding-left: 10px;
+            margin: 24px 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .operasional-view table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .operasional-view th {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .operasional-view td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 9pt;
+            color: #334155;
+        }
+        .operasional-view tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+        .operasional-view .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+        .operasional-view .badge-facility { background-color: #dbeafe; color: #1e40af; }
+        .operasional-view .badge-kitchen { background-color: #fef3c7; color: #92400e; }
+        .operasional-view .badge-atk { background-color: #dcfce7; color: #166534; }
+        .operasional-view .grand-total-row td {
+            background-color: #1e3a8a !important;
+            color: #ffffff !important;
+            font-size: 10.5pt;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- LAYAR GERBANG LOGIN (PASSWORD: GMI2026) -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full text-center space-y-6">
+            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-lock animate-bounce"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-900">Protected Workspace</h2>
+                <p class="text-sm text-slate-500 mt-1">Silakan masukkan kata sandi akses keamanan untuk membuka aplikasi budgeting ini.</p>
+            </div>
+            <form onsubmit="handleAuth(event)" class="space-y-4">
+                <input type="password" id="login-password" required placeholder="Masukkan kata sandi..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-center focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <p id="login-error" class="text-xs text-red-500 hidden font-semibold">Kata sandi tidak sesuai. Silakan coba kembali.</p>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition shadow-sm">
+                    Verifikasi Akses
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- AREA UTAMA APLIKASI -->
+    <div class="w-full px-4 lg:px-12 py-8 mx-auto flex-1">
+        <!-- Header -->
+        <header class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div class="flex-1 w-full">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-folder-tree text-indigo-600 animate-pulse"></i> Workspace Anggaran Proyek
+                    </h1>
+                    <!-- Indikator Status Sinkronisasi Database Global -->
+                    <div class="flex items-center gap-2">
+                        <span id="sync-status" onclick="toggleDbSettings()" class="text-xs text-amber-600 font-medium bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100 inline-flex items-center gap-1.5 animate-pulse w-fit cursor-pointer">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Menghubungkan...
+                        </span>
+                        <button onclick="toggleDbSettings()" class="text-slate-400 hover:text-slate-600 text-xs font-semibold flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition">
+                            <i class="fa-solid fa-gear"></i> Pengaturan DB
+                        </button>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">GMI Workspace &bull; Kelola multi-proyek, analisis manpower, dan estimasi biaya terpusat</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                <button onclick="exportToPDF()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-pdf"></i> Pengajuan Budget (PDF)
+                </button>
+                <button onclick="openPresentation()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-chalkboard-user"></i> Presentasi
+                </button>
+                <button onclick="exportToExcel()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i> Ekspor Excel
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER PERINGATAN STRUKTUR TABEL TIDAK TERDETEKSI (SQL EDITOR) -->
+        <div id="db-schema-warning" class="hidden mx-auto mb-6 bg-red-50 border border-red-200 text-red-800 p-6 rounded-2xl space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-red-100 text-red-600 rounded-xl">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm">Struktur Tabel & Kebijakan Keamanan Belum Dikonfigurasi</h4>
+                    <p class="text-xs text-red-600 mt-1 leading-relaxed">
+                        Koneksi database berhasil, namun tabel utama (<code>projects</code>, <code>project_pricelist</code>, dan <code>budgeting_project</code>) beserta kebijakan hak aksesnya belum siap. Silakan salin skrip di bawah ini dan jalankan pada menu <strong>SQL Editor</strong> di dashboard Supabase Anda.
+                    </p>
+                </div>
+            </div>
+            <div class="relative">
+                <textarea id="ddl-sql-code" readonly class="w-full h-44 bg-slate-900 text-slate-300 p-4 rounded-xl text-xs font-mono focus:outline-none resize-none"></textarea>
+                <button onclick="copySqlCode()" class="absolute top-3 right-3 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-copy"></i> Salin SQL
+                </button>
+            </div>
+        </div>
+
+        <!-- PANEL KONFIGURASI DATABASE (COLLAPSIBLE) -->
+        <div id="db-config-panel" class="hidden mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-database text-indigo-600"></i> Konfigurasi Koneksi Supabase
+                </h3>
+                <span class="text-xs text-slate-400">Hubungkan database eksternal Anda untuk menyimpan data secara real-time</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Supabase Project URL</label>
+                    <input type="text" id="db-url" placeholder="Contoh: https://xyz.supabase.co" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Supabase Anon Key (API Key)</label>
+                    <input type="password" id="db-key" placeholder="Masukkan anon public key..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="saveAndConnectDb()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-plug"></i> Simpan & Sambungkan
+                </button>
+                <button onclick="resetDbSettings()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition">
+                    Gunakan Mode Demo (Mock Storage)
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB NAVIGATION -->
+        <div class="flex flex-wrap border-b border-slate-200 mb-6 bg-white rounded-xl shadow-sm overflow-hidden p-1 gap-1">
+            <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all bg-indigo-50 text-indigo-700">
+                <i class="fa-solid fa-chart-line mr-2"></i> Dashboard & Saran AI
+            </button>
+            <button onclick="switchTab('budgeting')" id="tab-btn-budgeting" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+                <i class="fa-solid fa-list-check mr-2"></i> Rencana Anggaran
+            </button>
+            <button onclick="switchTab('pricelist')" id="tab-btn-pricelist" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+                <i class="fa-solid fa-tags mr-2"></i> Master Pricelist
+            </button>
+            <button onclick="switchTab('operasional')" id="tab-btn-operasional" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+                <i class="fa-solid fa-receipt mr-2"></i> Operasional Bulanan
+            </button>
+            <button onclick="switchTab('projects')" id="tab-btn-projects" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+                <i class="fa-solid fa-folder mr-2"></i> Kelola Proyek
+            </button>
+            <button onclick="switchTab('ratio-calc')" id="tab-btn-ratio-calc" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+                <i class="fa-solid fa-calculator mr-2"></i> Rumus & Kalkulator Rasio
+            </button>
+        </div>
+
+        <!-- ==================== MENU 1: DASHBOARD ANALISA & AI ==================== -->
+        <div id="screen-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Proyek Aktif</p>
+                        <h4 id="dash-project-name" class="text-lg font-black text-slate-800 mt-1">-</h4>
+                    </div>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-folder text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Total Estimasi Anggaran</p>
+                        <h4 id="dash-total-budget" class="text-xl font-black text-slate-800 mt-1">Rp 0</h4>
+                    </div>
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-wallet text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Item</p>
+                        <h4 id="dash-total-items" class="text-xl font-black text-slate-800 mt-1">0 Item</h4>
+                    </div>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-box-open text-xl"></i></div>
+                </div>
+                <!-- Kartu Kuantitas Manpower Interaktif -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase mb-1">Kapasitas Manpower</p>
+                        <div class="flex items-center gap-1.5">
+                            <input type="number" id="dash-manpower-input" min="1" value="1" onchange="updateProjectManpowerCount(this.value)" class="w-16 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-black text-slate-800 text-center focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                            <span class="text-xs font-bold text-slate-500">Orang</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Chart Panel -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm col-span-1 lg:col-span-2">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider">Distribusi Anggaran Proyek</h3>
+                    <div class="h-72 relative">
+                        <canvas id="dashboard-chart"></canvas>
+                    </div>
+                </div>
+                <!-- AI Advisory Engine -->
+                <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></div>
+                            <span class="text-xs font-black tracking-widest text-indigo-300 uppercase">GMI AI ADVISOR</span>
+                        </div>
+                        <h3 class="text-lg font-bold mb-3">Analisa & Rekomendasi Anggaran</h3>
+                        <div id="ai-suggestions-content" class="space-y-3 text-xs text-slate-300 max-h-[220px] overflow-y-auto pr-1">
+                            <!-- Diisi Otomatis Berdasarkan Kalkulasi Logis -->
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-slate-500 border-t border-slate-800 pt-4 mt-4">
+                        Analisis dibuat secara otomatis berdasarkan parameter rasio Manpower dan data CapEx/OpEx.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MENU 2: RENCANA ANGGARAN ==================== -->
+        <div id="screen-budgeting" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Form Card & Manpower Settings -->
+            <div class="lg:col-span-1 flex flex-col gap-4">
+                <!-- Manpower Control -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Otomatisasi Manpower</h3>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="project-manpower-enabled" onchange="toggleProjectManpower()" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                    <!-- Dipastikan Selalu Terlihat agar Sinkronisasi Lebih Terbaca -->
+                    <div id="manpower-settings" class="space-y-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase">Jumlah Manpower Terencana</label>
+                        <input type="number" id="project-manpower-count" min="1" value="1" onchange="updateProjectManpowerCount(this.value)" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold bg-amber-50 text-slate-800">
+                        <p class="text-[10px] text-slate-400">Qty barang dengan rasio khusus akan berlipat ganda sesuai kuantitas tim ini.</p>
+                    </div>
+                </div>
+
+                <!-- Form Add Item -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                        <i class="fa-solid fa-plus-circle text-indigo-600"></i> Tambah Anggaran
+                    </h2>
+                    <form id="budget-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Barang (Autocomplete)</label>
+                            <input type="text" id="input-nama" required list="pricelist-options" oninput="handleNamaInput(this.value)" placeholder="Ketik nama atau pilih master..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="hidden" id="input-manpower-ratio-hidden" value="0">
+                            <datalist id="pricelist-options"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
+                            <select id="input-kategori" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="Peralatan">Peralatan</option>
+                                <option value="Perlengkapan">Perlengkapan</option>
+                                <option value="Operasional">Operasional</option>
+                                <option value="Pemasaran">Pemasaran</option>
+                                <option value="Sewa & Renovasi">Sewa & Renovasi</option>
+                                <option value="Handstool">Handstool</option>
+                                <option value="Special Tools">Special Tools</option>
+                                <option value="APD">APD</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Vendor / Penyedia</label>
+                            <input type="text" id="input-vendor" placeholder="Contoh: CV. Berkat Sejahtera" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <!-- Form input Aset pada Transaksi Anggaran -->
+                        <div class="flex items-center gap-2 py-1">
+                            <input type="checkbox" id="input-is-asset" onchange="toggleInputAssetInput()" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                            <label for="input-is-asset" class="text-xs font-semibold text-slate-700">Item ini merupakan Aset</label>
+                        </div>
+                        <div id="input-dep-container" class="hidden">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Masa Depresiasi (Tahun)</label>
+                            <input type="number" id="input-dep-tahun" min="1" max="50" value="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Qty / Plan</label>
+                                <input type="number" id="input-qty" min="1" required value="1" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Harga Satuan (Rp)</label>
+                                <input type="number" id="input-harga" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Deskripsi</label>
+                            <textarea id="input-deskripsi" rows="2" placeholder="Spesifikasi detail..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition shadow-sm">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i> Tambah Item
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Table Card Container -->
+            <div class="lg:col-span-3 flex flex-col gap-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
+                    <!-- Filter Rencana Anggaran Integrasi Baru -->
+                    <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+                        <h3 class="font-bold text-slate-900">Rincian Rencana Anggaran (Tabel: budgeting_project)</h3>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <!-- Input Filter Rencana Anggaran -->
+                            <input type="text" id="budget-filter-input" oninput="filterBudgetTable()" placeholder="Cari nama, kategori, vendor..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 sm:w-60">
+                            <button id="btn-toggle-bulk-mode" onclick="toggleBulkEditMode()" class="px-3.5 py-2 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white shadow-sm font-sans">
+                                <i class="fa-solid fa-list-check"></i> Edit Qty Massal
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel Kuantitas Massal -->
+                    <div id="bulk-edit-bar" class="hidden bg-indigo-50 border-y border-indigo-100 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAllBudget(this.checked)" class="w-4 h-4 rounded text-indigo-600 border-slate-300">
+                            <span class="text-xs font-bold text-slate-700">Pilih Semua Item Terpilih</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-semibold text-slate-600">Set Kuantitas Baru:</label>
+                            <input type="number" id="bulk-qty-input" min="1" value="5" class="w-20 px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-center font-bold">
+                            <button onclick="applyBulkQtyUpdate()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition">
+                                Update Terpilih
+                            </button>
+                            <button onclick="toggleBulkEditMode()" class="px-3 py-1.5 bg-slate-200 text-slate-600 hover:bg-slate-300 rounded-lg text-xs font-semibold transition">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Seluruh Kolom Dipecah Terpisah Sesuai Atribut Database -->
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse min-w-[1000px]">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                    <th id="th-bulk-checkbox" class="p-4 w-[3%] hidden"></th>
+                                    <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('kategori')">
+                                        Kategori <i id="sort-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[15%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('nama_barang')">
+                                        Nama Barang <i id="sort-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('nama_vendor')">
+                                        Vendor <i id="sort-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[5%] text-center cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('jumlah')">
+                                        Qty <i id="sort-icon-jumlah" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[9%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('harga_satuan')">
+                                        Satuan (Rp) <i id="sort-icon-harga_satuan" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[10%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('total_harga')">
+                                        Total (Rp) <i id="sort-icon-total_harga" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[8%]">Tipe</th>
+                                    <th class="p-4 w-[8%] text-center">Depresiasi</th>
+                                    <th class="p-4 w-[8%] text-center">Rasio MP</th>
+                                    <th class="p-4 w-[12%]">Deskripsi</th>
+                                    <th class="p-4 w-[5%] text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="budget-tbody" class="divide-y divide-slate-100 text-sm">
+                                <tr>
+                                    <td colspan="12" class="p-8 text-center text-slate-400">Memuat rincian tabel...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MENU 3: MASTER PRICELIST ==================== -->
+        <div id="screen-pricelist" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Form Card Master Pricelist -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-tag text-emerald-600"></i> Registrasi Master Item
+                </h2>
+                <form id="pricelist-form" onsubmit="handlePricelistSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
+                        <select id="pl-kategori" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="Peralatan">Peralatan</option>
+                            <option value="Perlengkapan">Perlengkapan</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="Pemasaran">Pemasaran</option>
+                            <option value="Sewa & Renovasi">Sewa & Renovasi</option>
+                            <option value="Handstool">Handstool</option>
+                            <option value="Special Tools">Special Tools</option>
+                            <option value="APD">APD</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Barang</label>
+                        <input type="text" id="pl-nama" required placeholder="Contoh: AC Split 1 PK" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Vendor Utama</label>
+                        <input type="text" id="pl-vendor" placeholder="Contoh: PT. Electronic Solusindo" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    
+                    <!-- Checkbox Aset & Masa Depresiasi di Master Form -->
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" id="pl-is-asset" onchange="togglePlAssetInput()" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500">
+                        <label for="pl-is-asset" class="text-xs font-semibold text-slate-700">Item ini merupakan Aset</label>
+                    </div>
+                    <div id="pl-dep-container" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Masa Depresiasi (Tahun)</label>
+                        <input type="number" id="pl-dep-tahun" min="1" max="50" value="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans">
+                    </div>
+
+                    <!-- Input Rasio Manpower -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rasio Kebutuhan Manpower</label>
+                        <input type="number" id="pl-manpower-ratio" step="0.1" min="0" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold">
+                        <p class="text-[10px] text-slate-400 mt-1">Isi rasio kebutuhan per orang (Contoh: 1, 0.5, atau 2). Biarkan 0 jika tidak ada hubungan rasio.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Harga Estimasi Standard (Rp)</label>
+                        <input type="number" id="pl-harga" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Deskripsi Tambahan</label>
+                        <textarea id="pl-deskripsi" rows="2" placeholder="Spesifikasi standar..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition shadow-sm font-sans">
+                        <i class="fa-solid fa-bookmark mr-2"></i> Simpan ke Pricelist
+                    </button>
+                </form>
+            </div>
+
+            <!-- Table Card Master Pricelist & Importer -->
+            <div class="lg:col-span-3 flex flex-col">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
+                    <!-- Filter Master Pricelist Integrasi Baru -->
+                    <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50">
+                        <div>
+                            <h3 class="font-bold text-slate-900">Master Data Katalog Harga (Tabel: project_pricelist)</h3>
+                            <p class="text-xs text-slate-400">Gunakan berkas Excel sebagai referensi ataupun alat import masal</p>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                            <!-- Input Filter Master Pricelist -->
+                            <input type="text" id="pricelist-filter-input" oninput="filterPricelistTable()" placeholder="Cari nama, kategori, vendor..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 w-44 sm:w-60">
+                            <!-- Tombol Pakai Terpilih (Kolektif) -->
+                            <button onclick="applyBulkPricelistUse()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm font-sans">
+                                <i class="fa-solid fa-cart-plus"></i> Pakai Terpilih
+                            </button>
+                            <button onclick="exportPricelistTemplate()" class="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm bg-white font-sans">
+                                <i class="fa-solid fa-cloud-arrow-down text-slate-500"></i> Format Excel
+                            </button>
+                            <label class="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:bg-emerald-100 font-sans">
+                                <i class="fa-solid fa-file-import text-emerald-600"></i> Import Excel
+                                <input type="file" id="excel-import-input" accept=".xlsx" class="hidden" onchange="importPricelistExcel(event)">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Kolom Dipecah Terpisah Secara Rinci -->
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse min-w-[900px]">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                    <th class="p-4 w-[4%] text-center">
+                                        <input type="checkbox" id="pl-select-all" onchange="toggleSelectAllPricelist(this.checked)" class="w-4 h-4 rounded text-emerald-600 border-slate-300">
+                                    </th>
+                                    <th class="p-4 w-[12%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('kategori')">
+                                        Kategori <i id="sort-pl-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[18%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('nama_barang')">
+                                        Nama Barang <i id="sort-pl-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('nama_vendor')">
+                                        Vendor <i id="sort-pl-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[12%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('harga_estimasi')">
+                                        Harga Estimasi <i id="sort-pl-icon-harga_estimasi" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                    </th>
+                                    <th class="p-4 w-[9%]">Tipe</th>
+                                    <th class="p-4 w-[9%] text-center">Depresiasi</th>
+                                    <th class="p-4 w-[9%] text-center">Rasio MP</th>
+                                    <th class="p-4 w-[11%]">Deskripsi</th>
+                                    <th class="p-4 w-[5%] text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pricelist-tbody" class="divide-y divide-slate-100 text-sm">
+                                <tr>
+                                    <td colspan="10" class="p-8 text-center text-slate-400">Memuat data catalog pricelist...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MENU 4: DATA OPERASIONAL BULANAN ==================== -->
+        <div id="screen-operasional" class="hidden operasional-view">
+            <!-- Header -->
+            <div class="header-op">
+                <h1>PRICELIST & RESUME KEBUTUHAN KANTOR</h1>
+                <p>Estimasi Harga Max Balikpapan - Skala 7 Orang Karyawan (1 Bulan)</p>
+            </div>
+
+            <!-- Metadata Bar -->
+            <div class="meta-bar">
+                <div class="meta-item">
+                    <div class="meta-label">Lokasi Acuan</div>
+                    <div class="meta-value">Balikpapan, Kaltim</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Kapasitas Kantor</div>
+                    <div class="meta-value">7 Personil (1 Bulan)</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Total Anggaran</div>
+                    <div class="meta-value text-blue-600">Rp 3.556.000</div>
+                </div>
+            </div>
+
+            <!-- Section 1: Summary -->
+            <div class="section-title">1. RINGKASAN ANGGARAN PER KATEGORI</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">No</th>
+                        <th style="width: 55%;">Kategori Kebutuhan</th>
+                        <th style="width: 35%;" class="text-right">Total Estimasi Biaya (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center font-bold">1</td>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span> (Kebersihan & Operasional)</td>
+                        <td class="text-right font-bold">Rp 1.315.000</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">2</td>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span> (Pantry & Konsumsi)</td>
+                        <td class="text-right font-bold">Rp 1.021.000</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">3</td>
+                        <td><span class="badge badge-atk">Alat Tulis Kantor (ATK)</span> & Supplies</td>
+                        <td class="text-right font-bold">Rp 1.220.000</td>
+                    </tr>
+                    <tr class="grand-total-row">
+                        <td colspan="2" class="text-right">TOTAL ESTIMASI ANGGARAN BULANAN</td>
+                        <td class="text-right">Rp 3.556.000</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Section 2: Detail Pricelist -->
+            <div class="section-title">2. DETAIL PRICELIST BARANG & KUANTITAS BULANAN</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Kategori</th>
+                        <th style="width: 35%;">Nama Barang / Deskripsi</th>
+                        <th style="width: 10%;" class="text-center">Satuan</th>
+                        <th style="width: 7%;" class="text-center">Qty</th>
+                        <th style="width: 14%;" class="text-right">Harga (Rp)</th>
+                        <th style="width: 14%;" class="text-right">Total (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Fasilitas Kantor -->
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Tisu Wajah (Facial Tissue) 250s</td>
+                        <td class="text-center">Pack</td>
+                        <td class="text-center font-bold">8</td>
+                        <td class="text-right">Rp 25.000</td>
+                        <td class="text-right font-bold">Rp 200.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Tisu Toilet (Roll) isi 10</td>
+                        <td class="text-center">Pack</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 75.000</td>
+                        <td class="text-right font-bold">Rp 150.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Sabun Cuci Tangan (Hand Soap) 5L</td>
+                        <td class="text-center">Jerigen</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 250.000</td>
+                        <td class="text-right font-bold">Rp 250.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Cairan Pembersih Lantai 5L</td>
+                        <td class="text-center">Jerigen</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 200.000</td>
+                        <td class="text-right font-bold">Rp 200.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Plastik Sampah (Trash Bag) Hitam</td>
+                        <td class="text-center">Pack</td>
+                        <td class="text-center font-bold">4</td>
+                        <td class="text-right">Rp 50.000</td>
+                        <td class="text-right font-bold">Rp 200.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Pengharum Ruangan Semprot (Refill)</td>
+                        <td class="text-center">Kaleng</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 60.000</td>
+                        <td class="text-right font-bold">Rp 120.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Lampu LED 13W (Philips/Setara)</td>
+                        <td class="text-center">Pcs</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 85.000</td>
+                        <td class="text-right font-bold">Rp 170.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-facility">Fasilitas Kantor</span></td>
+                        <td>Cairan Pembersih Kaca 400ml</td>
+                        <td class="text-center">Pouch</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 25.000</td>
+                        <td class="text-right font-bold">Rp 25.000</td>
+                    </tr>
+
+                    <!-- Kebutuhan Dapur -->
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Air Mineral Galon (Refill)</td>
+                        <td class="text-center">Galon</td>
+                        <td class="text-center font-bold">15</td>
+                        <td class="text-right">Rp 28.000</td>
+                        <td class="text-right font-bold">Rp 420.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Kopi Bubuk (Kapal Api 380g)</td>
+                        <td class="text-center">Bungkus</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 45.000</td>
+                        <td class="text-right font-bold">Rp 90.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Kopi Instan (Nescafe Classic 200g)</td>
+                        <td class="text-center">Botol</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 95.000</td>
+                        <td class="text-right font-bold">Rp 95.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Teh Celup (Sariwangi 50s)</td>
+                        <td class="text-center">Kotak</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 15.000</td>
+                        <td class="text-right font-bold">Rp 30.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Gula Pasir Premium (1kg)</td>
+                        <td class="text-center">Kg</td>
+                        <td class="text-center font-bold">3</td>
+                        <td class="text-right">Rp 22.000</td>
+                        <td class="text-right font-bold">Rp 66.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Sabun Cuci Piring 5L</td>
+                        <td class="text-center">Jerigen</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 220.000</td>
+                        <td class="text-right font-bold">Rp 220.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Gelas Kertas (Paper Cup) isi 50</td>
+                        <td class="text-center">Slop</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 40.000</td>
+                        <td class="text-right font-bold">Rp 80.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-kitchen">Kebutuhan Dapur</span></td>
+                        <td>Spons Cuci Piring</td>
+                        <td class="text-center">Pcs</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 10.000</td>
+                        <td class="text-right font-bold">Rp 20.000</td>
+                    </tr>
+
+                    <!-- ATK -->
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Kertas HVS A4 80gsm</td>
+                        <td class="text-center">Rim</td>
+                        <td class="text-center font-bold">3</td>
+                        <td class="text-right">Rp 75.000</td>
+                        <td class="text-right font-bold">Rp 225.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Kertas HVS F4 80gsm</td>
+                        <td class="text-center">Rim</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 85.000</td>
+                        <td class="text-right font-bold">Rp 170.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Pulpen Hitam 1 Lusin</td>
+                        <td class="text-center">Kotak</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 45.000</td>
+                        <td class="text-right font-bold">Rp 45.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Spidol Whiteboard 1 Lusin</td>
+                        <td class="text-center">Kotak</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 120.000</td>
+                        <td class="text-right font-bold">Rp 120.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Tinta Printer (Botol Original)</td>
+                        <td class="text-center">Botol</td>
+                        <td class="text-center font-bold">2</td>
+                        <td class="text-right">Rp 150.000</td>
+                        <td class="text-right font-bold">Rp 300.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Sticky Notes 3x3</td>
+                        <td class="text-center">Pad</td>
+                        <td class="text-center font-bold">4</td>
+                        <td class="text-right">Rp 25.000</td>
+                        <td class="text-right font-bold">Rp 100.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Stapler Ukuran Sedang</td>
+                        <td class="text-center">Pcs</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 35.000</td>
+                        <td class="text-right font-bold">Rp 35.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Isi Staples (10 Box Kecil)</td>
+                        <td class="text-center">Pack</td>
+                        <td class="text-center font-bold">1</td>
+                        <td class="text-right">Rp 45.000</td>
+                        <td class="text-right font-bold">Rp 45.000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-atk">ATK</span></td>
+                        <td>Odner / Map File Besar</td>
+                        <td class="text-center">Pcs</td>
+                        <td class="text-center font-bold">4</td>
+                        <td class="text-right">Rp 45.000</td>
+                        <td class="text-right font-bold">Rp 180.000</td>
+                    </tr>
+                    <tr class="grand-total-row">
+                        <td colspan="5" class="text-right">TOTAL ESTIMASI ANGGARAN BULANAN</td>
+                        <td class="text-right">Rp 3.556.000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ==================== MENU 5: KELOLA PROYEK (CRUD) ==================== -->
+        <div id="screen-projects" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Form Create/Edit Project -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
+                <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-folder-plus text-indigo-600"></i> Setup Proyek Baru (Tabel: projects)
+                </h2>
+                <form id="project-form" onsubmit="handleProjectSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="project-id-input">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Proyek</label>
+                        <input type="text" id="project-name-form" required placeholder="Contoh: Pembukaan Cabang Solo" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition shadow-sm font-sans">
+                        <i class="fa-solid fa-save mr-2"></i> Simpan Proyek
+                    </button>
+                    <button type="button" onclick="resetProjectForm()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">
+                        Reset Form
+                    </button>
+                </form>
+            </div>
+
+            <!-- List Projects -->
+            <div class="lg:col-span-3 flex flex-col">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
+                    <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                        <h3 class="font-bold text-slate-900">Daftar Proyek Aktif</h3>
+                        <p class="text-xs text-slate-400">Pilih proyek default yang akan terhubung otomatis pada tab Rencana Anggaran</p>
+                    </div>
+                    
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                    <th class="p-4 w-[40%]">Nama Proyek</th>
+                                    <th class="p-4 w-[20%] text-center">Default Workspace</th>
+                                    <th class="p-4 w-[25%]">Dibuat Tanggal</th>
+                                    <th class="p-4 w-[15%] text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projects-tbody" class="divide-y divide-slate-100 text-sm">
+                                <tr>
+                                    <td colspan="4" class="p-8 text-center text-slate-400">Memuat data proyek...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MENU 6: RUMUS & KALKULATOR RASIO ==================== -->
+        <div id="screen-ratio-calc" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Penjelasan Teknis Rumus -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Dokumentasi Teori -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-amber-500"></i> Memahami Otomatisasi Logistik (Rasio Manpower)
+                    </h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Dalam pembuatan rencana anggaran pembukaan proyek baru, kuantitas kebutuhan beberapa barang logistik dipengaruhi secara langsung oleh jumlah personel lapangan. Fitur <strong>Rasio Manpower</strong> di GMI Workspace mengotomatiskan hal ini secara dinamis.
+                    </p>
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="text-xs text-amber-800 space-y-1">
+                            <span class="font-bold block">RUMUS MATEMATIS SISTEM:</span>
+                            <span class="font-mono text-sm block font-bold text-amber-900">Kuantitas (Qty) = Jumlah Manpower × Rasio Kebutuhan</span>
+                            <span class="block italic text-[10px] text-amber-700">*Sistem membulatkan hasil perkalian desimal ke angka bulat terdekat, dan menetapkan minimal 1 unit untuk semua rasionya di atas 0.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Penjelasan Detail Kasus -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-shapes text-indigo-600"></i> Klasifikasi Standar Koefisien Rasio
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-full">RASIO 1.0 (Skala 1:1)</span>
+                            <h4 class="text-xs font-bold text-slate-800">Skala Kebutuhan Utama Individu</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Setiap staf berhak mendapatkan tepat 1 unit barang pribadi. Contoh: Laptop kerja, kursi kantor, helm safety, rompi APD.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-full">RASIO > 1.0 (Cadangan)</span>
+                            <h4 class="text-xs font-bold text-slate-800">Skala Cadangan / Konsumsi Rutin</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Kebutuhan staf yang memerlukan unit tambahan untuk cadangan/stok bulanan. Contoh: Baju seragam (Rasio 2.0).</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-full">RASIO 0.5 (Skala 1:2)</span>
+                            <h4 class="text-xs font-bold text-slate-800">Skala Tandem / Berbagi Alat</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Satu unit barang dapat dimanfaatkan atau dibagikan secara bersama untuk dua orang. Contoh: Meja tandem sekat, alat ukur khusus.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-full">RASIO RENDAH (&lt; 0.15)</span>
+                            <h4 class="text-xs font-bold text-slate-800">Fasilitas Pantry / Kebersihan</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">Pengadaan barang habis pakai kolektif yang digunakan seluruh tim di satu area. Contoh: Sabun cuci tangan 5L (Rasio 0.14).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interaktif Simulator & Visualisasi -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-500"></i> Simulator Kalkulator Rasio
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kuantitas Manpower (Personel)</label>
+                            <input type="number" id="sim-manpower-input" min="1" value="7" oninput="runRatioSimulation()" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Koefisien Rasio Kebutuhan</label>
+                            <input type="number" id="sim-ratio-input" step="0.01" min="0" value="1.0" oninput="runRatioSimulation()" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold text-slate-800">
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            <button onclick="setSimPresetRatio(1.0)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition">1.0 (Utama)</button>
+                            <button onclick="setSimPresetRatio(2.0)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition">2.0 (Ganda)</button>
+                            <button onclick="setSimPresetRatio(0.5)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition">0.5 (Tandem)</button>
+                            <button onclick="setSimPresetRatio(0.14)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition">0.14 (Pantry)</button>
+                            <button onclick="setSimPresetRatio(0)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition">0 (Fixed)</button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-4 space-y-3">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-500">Hasil Desimal Mentah:</span>
+                            <span id="sim-raw-result" class="font-mono font-bold text-slate-700">7.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm bg-amber-50/50 p-3 rounded-xl border border-amber-100/50">
+                            <span class="font-bold text-slate-700">Output Pengadaan:</span>
+                            <span id="sim-final-result" class="font-black text-amber-600 text-base">7 Unit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider text-center">Visualisasi Alokasi Distribusi</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Anggota Tim Kerja</span>
+                            <div id="sim-vis-team" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto"></div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Alokasi Paket Logistik</span>
+                            <div id="sim-vis-items" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRESENTATION MODAL -->
+    <div id="presentation-modal" class="fixed inset-0 bg-slate-900/90 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-4xl w-full text-white relative flex flex-col h-[85vh]">
+            <button onclick="closePresentation()" class="absolute top-6 right-6 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="flex-1 flex flex-col justify-between overflow-y-auto">
+                <!-- Slide 1: Welcome & Summary -->
+                <div id="slide-1" class="space-y-6 my-auto">
+                    <div class="text-center space-y-2">
+                        <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-semibold uppercase tracking-wider">Executive Presentation Cover</span>
+                        <h2 id="pres-project-title" class="text-4xl font-extrabold tracking-tight">Nama Proyek</h2>
+                        <p class="text-slate-400 text-sm max-w-md mx-auto">Master Budgeting & Kebutuhan Opening Project Terintegrasi</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-4">
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Kebutuhan Anggaran</p>
+                            <p id="pres-total-budget" class="text-2xl font-black text-indigo-400 mt-2">Rp 0</p>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Status Pembiayaan</p>
+                            <p class="text-lg font-bold text-emerald-400 mt-2 flex items-center justify-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> Siap Diajukan
+                            </p>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Alokasi Manpower</p>
+                            <p id="pres-manpower-stat" class="text-2xl font-black text-amber-400 mt-2">0 Orang</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Chart Breakdown -->
+                <div id="slide-2" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 items-center my-auto">
+                    <div class="h-64 relative">
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-lg font-bold">Rincian Komposisi Anggaran</h3>
+                            <p class="text-slate-400 text-xs">Proporsi pembagian anggaran berdasarkan klasifikasi kategori</p>
+                        </div>
+                        <div id="category-breakdown-list" class="space-y-2 max-h-[30vh] overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: CapEx/OpEx & APD Audit -->
+                <div id="slide-3" class="hidden space-y-6 my-auto max-w-3xl mx-auto w-full">
+                    <div class="text-center space-y-1 mb-4">
+                        <h3 class="text-2xl font-bold">Audit Kelayakan & Struktur Aset</h3>
+                        <p class="text-slate-400 text-xs">Analisa porsi investasi CapEx (Aset) vs pengeluaran habis pakai (OpEx)</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-3">Distribusi Jenis Pengeluaran</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-400">CapEx (Aset Investasi)</span>
+                                        <span id="pres-capex-percent" class="font-bold text-indigo-400">0%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                                        <div id="pres-capex-bar" class="bg-indigo-500 h-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-400">OpEx (Bahan Habis Pakai)</span>
+                                        <span id="pres-opex-percent" class="font-bold text-emerald-400">0%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                                        <div id="pres-opex-bar" class="bg-emerald-500 h-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-2">
+                            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2">Audit Kesiapan Keselamatan (APD & Alat)</h4>
+                            <p id="pres-apd-summary" class="text-xs text-slate-400 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="border-t border-slate-800 pt-6 mt-6 flex justify-between items-center">
+                <span class="text-xs text-slate-500 font-medium">Halaman <span id="current-slide-num">1</span> dari 3</span>
+                <div class="flex gap-2">
+                    <button id="prev-btn" onclick="prevSlide()" disabled class="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-left"></i> Sebelumnya
+                    </button>
+                    <button id="next-btn" onclick="nextSlide()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                        Berikutnya <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER DEVELOPMENT IDENTITY -->
+    <footer class="mt-12 pb-6 text-center">
+        <p class="text-xs font-bold text-blue-600">Develope By Harizal</p>
+    </footer>
+
+    <!-- SCRIPT JAVASCRIPT UTAMA -->
+    <script>
+        // ==========================================
+        //  PENGATURAN GLOBAL & KONFIGURASI DATABASE
+        // ==========================================
+        const DEFAULT_URL = "https://langnyazndilyggzliqd.supabase.co/rest/v1/";
+        const DEFAULT_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhbmdueWF6bmRpbHlnZ3psaXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NDQ4MDMsImV4cCI6MjEwMTMyMDgwM30.gGG-e1PEb9j804JgQQX6yndah0_ZxMil23LJwNrQc7Y";
+
+        let supabaseClient = null;
+        let isUsingFallback = true; 
+        let activeEditRowId = null;
+        let activePricelistEditRowId = null; 
+        let localBudgetData = []; 
+        let localPricelistData = [];
+        let localProjectsData = [];
+        let activeProjectId = null;
+        let currentSlide = 1;
+        let chartInstance = null;
+        let dashboardChartInstance = null;
+        let currentTab = 'dashboard';
+        let bulkEditMode = false;
+
+        // State Parameter Fitur Sortir
+        let budgetSortKey = 'created_at';
+        let budgetSortDirection = 'desc';
+        let pricelistSortKey = 'nama_barang';
+        let pricelistSortDirection = 'asc';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth(); 
+        });
+
+        function checkAuth() {
+            const isAuth = sessionStorage.getItem('pik_authenticated');
+            const overlay = document.getElementById('login-overlay');
+            if (isAuth === 'true') {
+                overlay.classList.add('hidden');
+                initSupabase(); 
+            } else {
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        function handleAuth(event) {
+            event.preventDefault();
+            const pwd = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (pwd === 'GMI2026') {
+                sessionStorage.setItem('pik_authenticated', 'true');
+                document.getElementById('login-overlay').classList.add('hidden');
+                initSupabase();
+            } else {
+                errorEl.classList.remove('hidden');
+                document.getElementById('login-password').value = '';
+            }
+        }
+
+        function loadConfig() {
+            const savedUrl = localStorage.getItem('supabase_url') || DEFAULT_URL;
+            const savedKey = localStorage.getItem('supabase_key') || DEFAULT_KEY;
+            return { url: savedUrl, key: savedKey };
+        }
+
+        // Inisialisasi Klien Supabase & Fallback Control
+        function initSupabase() {
+            const config = loadConfig();
+            const statusBadge = document.getElementById('sync-status');
+            
+            if (document.getElementById('db-url')) document.getElementById('db-url').value = config.url;
+            if (document.getElementById('db-key')) document.getElementById('db-key').value = config.key;
+
+            if (config.url && config.key) {
+                try {
+                    const cleanUrl = config.url.replace(/\/rest\/v1\/?$/, "");
+                    supabaseClient = supabase.createClient(cleanUrl, config.key);
+                    isUsingFallback = false;
+                    
+                    statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Supabase Connected`;
+                    statusBadge.className = "text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 flex items-center gap-1.5 cursor-pointer";
+                    
+                    startApplicationFlow();
+                } catch (err) {
+                    console.error("Inisialisasi client gagal:", err);
+                    switchToFallbackMode("Koneksi Error");
+                }
+            } else {
+                switchToFallbackMode("Mode Demo");
+            }
+        }
+
+        function switchToFallbackMode(reason) {
+            isUsingFallback = true;
+            supabaseClient = null;
+            const statusBadge = document.getElementById('sync-status');
+            if (statusBadge) {
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> ${reason} (Lokal)`;
+                statusBadge.className = "text-xs text-amber-700 font-bold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 inline-flex items-center gap-1.5 cursor-pointer";
+            }
+            startApplicationFlow();
+        }
+
+        function toggleDbSettings() {
+            const panel = document.getElementById('db-config-panel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        function saveAndConnectDb() {
+            const url = document.getElementById('db-url').value.trim();
+            const key = document.getElementById('db-key').value.trim();
+            
+            if (!url || !key) {
+                alert("Silakan lengkapi Supabase URL dan API Key.");
+                return;
+            }
+
+            localStorage.setItem('supabase_url', url);
+            localStorage.setItem('supabase_key', key);
+            
+            alert("Mencoba menghubungkan database Supabase...");
+            toggleDbSettings();
+            initSupabase();
+        }
+
+        function resetDbSettings() {
+            localStorage.removeItem('supabase_url');
+            localStorage.removeItem('supabase_key');
+            document.getElementById('db-url').value = '';
+            document.getElementById('db-key').value = '';
+            
+            alert("Menggunakan mode penyimpanan memori lokal.");
+            toggleDbSettings();
+            initSupabase();
+        }
+
+        async function startApplicationFlow() {
+            try {
+                document.getElementById('db-schema-warning').classList.add('hidden');
+                await fetchProjectsAndDefault();
+                await fetchPricelistSilent();
+            } catch (err) {
+                console.error("Gagal melakukan inisialisasi aplikasi:", err);
+            }
+        }
+
+        // ==========================================
+        //  ABSTRAKSI OPERASI DATA (INTEGRASI REAL/MOCK)
+        // ==========================================
+        async function dbSelect(table, options = {}) {
+            if (!isUsingFallback && supabaseClient) {
+                let query = supabaseClient.from(table).select(options.select || '*');
+                if (options.eq) {
+                    query = query.eq(options.eq[0], options.eq[1]);
+                }
+                if (options.order) {
+                    query = query.order(options.order[0], { ascending: options.order[1] !== false });
+                }
+                const { data, error } = await query;
+                if (error) throw error;
+                return data;
+            } else {
+                return getFallbackData(table, options);
+            }
+        }
+
+        async function dbInsert(table, payload) {
+            if (!isUsingFallback && supabaseClient) {
+                const payloadArray = Array.isArray(payload) ? payload : [payload];
+                const { data, error } = await supabaseClient.from(table).insert(payloadArray).select();
+                if (error) throw error;
+                return data;
+            } else {
+                return insertFallbackData(table, payload);
+            }
+        }
+
+        async function dbUpdate(table, payload, id, fieldName = 'id') {
+            if (!isUsingFallback && supabaseClient) {
+                const { data, error } = await supabaseClient.from(table).update(payload).eq(fieldName, id).select();
+                if (error) throw error;
+                return data;
+            } else {
+                return updateFallbackData(table, payload, id, fieldName);
+            }
+        }
+
+        async function dbDelete(table, id, fieldName = 'id') {
+            if (!isUsingFallback && supabaseClient) {
+                const { error } = await supabaseClient.from(table).delete().eq(fieldName, id);
+                if (error) throw error;
+                return true;
+            } else {
+                return deleteFallbackData(table, id, fieldName);
+            }
+        }
+
+        // ==========================================
+        //  PENGELOLA MOCK DATA LOCAL STORAGE
+        // ==========================================
+        function getFallbackData(table, options = {}) {
+            let data = [];
+            if (table === 'projects') {
+                const stored = localStorage.getItem('gmi_projects');
+                if (stored) {
+                    data = JSON.parse(stored);
+                } else {
+                    data = [{ id: 'p_default', name: 'Proyek Utama Pertama', is_default: true, manpower_enabled: false, manpower_count: 1, created_at: new Date().toISOString() }];
+                    localStorage.setItem('gmi_projects', JSON.stringify(data));
+                }
+            } else if (table === 'project_pricelist') {
+                const stored = localStorage.getItem('gmi_pricelist');
+                if (stored) {
+                    data = JSON.parse(stored);
+                } else {
+                    data = [
+                        { id: 101, kategori: 'Operasional', nama_barang: 'Tisu Wajah (Facial Tissue) 250s', nama_vendor: 'CV. Balikpapan Atk', harga_estimasi: 25000, deskripsi: 'Pack isi 250s', is_asset: false, masa_depresiasi: 5, manpower_ratio: 1.1 },
+                        { id: 102, kategori: 'Operasional', nama_barang: 'Tisu Toilet (Roll) isi 10', nama_vendor: 'CV. Balikpapan Atk', harga_estimasi: 75000, deskripsi: 'Pack isi 10 roll', is_asset: false, masa_depresiasi: 5, manpower_ratio: 0.3 },
+                        { id: 103, kategori: 'Operasional', nama_barang: 'Sabun Cuci Tangan (Hand Soap) 5L', nama_vendor: 'Pantry Supplier', harga_estimasi: 250000, deskripsi: 'Jerigen 5 Liter', is_asset: false, masa_depresiasi: 5, manpower_ratio: 0.14 },
+                        { id: 104, kategori: 'Operasional', nama_barang: 'Cairan Pembersih Lantai 5L', nama_vendor: 'Pantry Supplier', harga_estimasi: 200000, deskripsi: 'Jerigen 5 Liter', is_asset: false, masa_depresiasi: 5, manpower_ratio: 0.14 },
+                        { id: 105, kategori: 'APD', nama_barang: 'Helm Proyek SNI Biru', nama_vendor: 'CV. Safety First', harga_estimasi: 65000, deskripsi: 'Standard konstruksi', is_asset: false, masa_depresiasi: 5, manpower_ratio: 1.0 },
+                        { id: 106, kategori: 'APD', nama_barang: 'Rompi Safety Jaring Hijau', nama_vendor: 'CV. Safety First', harga_estimasi: 35000, deskripsi: 'Scotlite reflektif', is_asset: false, masa_depresiasi: 5, manpower_ratio: 1.0 },
+                        { id: 107, kategori: 'Peralatan', nama_barang: 'Laptop ThinkPad L14', nama_vendor: 'PT. Tech Solution', harga_estimasi: 14500000, deskripsi: 'Core i5, 16GB RAM, SSD 512GB', is_asset: true, masa_depresiasi: 4, manpower_ratio: 0.5 }
+                    ];
+                    localStorage.setItem('gmi_pricelist', JSON.stringify(data));
+                }
+            } else if (table === 'budgeting_project') {
+                const stored = localStorage.getItem('gmi_budgeting');
+                if (stored) {
+                    data = JSON.parse(stored);
+                } else {
+                    data = [];
+                    localStorage.setItem('gmi_budgeting', JSON.stringify(data));
+                }
+            }
+
+            if (options.eq) {
+                const key = options.eq[0];
+                const val = options.eq[1];
+                data = data.filter(item => item[key] == val);
+            }
+
+            if (options.order) {
+                const key = options.order[0];
+                const asc = options.order[1] !== false;
+                data.sort((a, b) => {
+                    let valA = a[key];
+                    let valB = b[key];
+                    if (typeof valA === 'string') {
+                        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    } else {
+                        return asc ? valA - valB : valB - valA;
+                    }
+                });
+            }
+            return data;
+        }
+
+        function insertFallbackData(table, payload) {
+            let storageKey = table === 'projects' ? 'gmi_projects' : (table === 'project_pricelist' ? 'gmi_pricelist' : 'gmi_budgeting');
+            let data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const inserted = [];
+            const payloads = Array.isArray(payload) ? payload : [payload];
+
+            payloads.forEach(p => {
+                const item = { 
+                    id: Date.now() + Math.floor(Math.random() * 1000), 
+                    created_at: new Date().toISOString(),
+                    ...p 
+                };
+                data.push(item);
+                inserted.push(item);
+            });
+
+            localStorage.setItem(storageKey, JSON.stringify(data));
+            return inserted;
+        }
+
+        function updateFallbackData(table, payload, id, fieldName = 'id') {
+            let storageKey = table === 'projects' ? 'gmi_projects' : (table === 'project_pricelist' ? 'gmi_pricelist' : 'gmi_budgeting');
+            let data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const updated = [];
+            
+            data = data.map(item => {
+                if (item[fieldName] == id) {
+                    const merged = { ...item, ...payload };
+                    updated.push(merged);
+                    return merged;
+                }
+                return item;
+            });
+
+            localStorage.setItem(storageKey, JSON.stringify(data));
+            return updated;
+        }
+
+        function deleteFallbackData(table, id, fieldName = 'id') {
+            let storageKey = table === 'projects' ? 'gmi_projects' : (table === 'project_pricelist' ? 'gmi_pricelist' : 'gmi_budgeting');
+            let data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+            if (table === 'projects') {
+                let budgeting = JSON.parse(localStorage.getItem('gmi_budgeting') || '[]');
+                budgeting = budgeting.filter(item => item.project_id != id);
+                localStorage.setItem('gmi_budgeting', JSON.stringify(budgeting));
+            }
+
+            data = data.filter(item => item[fieldName] != id);
+            localStorage.setItem(storageKey, JSON.stringify(data));
+            return true;
+        }
+
+        // ==========================================
+        //  PENGALIKAN PENANGANAN WARNING DDL SUPABASE
+        // ==========================================
+        function showDbSchemaWarning() {
+            const warningEl = document.getElementById('db-schema-warning');
+            const sqlTextarea = document.getElementById('ddl-sql-code');
+            if (warningEl && sqlTextarea) {
+                warningEl.classList.remove('hidden');
+                sqlTextarea.value = `-- JALANKAN SCRIPT INI DI SQL EDITOR DASHBOARD SUPABASE ANDA:\n\n` +
+`CREATE TABLE IF NOT EXISTS projects (\n` +
+`    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n` +
+`    name TEXT NOT NULL,\n` +
+`    is_default BOOLEAN DEFAULT false,\n` +
+`    manpower_enabled BOOLEAN DEFAULT false,\n` +
+`    manpower_count INT DEFAULT 1,\n` +
+`    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n` +
+`);\n\n` +
+`CREATE TABLE IF NOT EXISTS project_pricelist (\n` +
+`    id SERIAL PRIMARY KEY,\n` +
+`    kategori TEXT NOT NULL,\n` +
+`    nama_barang TEXT NOT NULL,\n` +
+`    nama_vendor TEXT DEFAULT '-',\n` +
+`    is_asset BOOLEAN DEFAULT false,\n` +
+`    masa_depresiasi INT DEFAULT 5,\n` +
+`    manpower_ratio NUMERIC DEFAULT 0,\n` +
+`    harga_estimasi NUMERIC DEFAULT 0,\n` +
+`    deskripsi TEXT DEFAULT '',\n` +
+`    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n` +
+`);\n\n` +
+`CREATE TABLE IF NOT EXISTS budgeting_project (\n` +
+`    id SERIAL PRIMARY KEY,\n` +
+`    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,\n` +
+`    kategori TEXT NOT NULL,\n` +
+`    nama_barang TEXT NOT NULL,\n` +
+`    nama_vendor TEXT DEFAULT '-',\n` +
+`    is_asset BOOLEAN DEFAULT false,\n` +
+`    masa_depresiasi INT DEFAULT 5,\n` +
+`    jumlah INT DEFAULT 1,\n` +
+`    harga_satuan NUMERIC DEFAULT 0,\n` +
+`    deskripsi TEXT DEFAULT '',\n` +
+`    manpower_ratio NUMERIC DEFAULT 0,\n` +
+`    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n` +
+`);\n\n` +
+`-- KEBIJAKAN AKSES PUBLIC BYPASS RLS (ANON ROLE)\n` +
+`ALTER TABLE projects ENABLE ROW LEVEL SECURITY;\n` +
+`ALTER TABLE project_pricelist ENABLE ROW LEVEL SECURITY;\n` +
+`ALTER TABLE budgeting_project ENABLE ROW LEVEL SECURITY;\n\n` +
+`CREATE POLICY "Allow public read projects" ON projects FOR SELECT USING (true);\n` +
+`CREATE POLICY "Allow public insert projects" ON projects FOR INSERT WITH CHECK (true);\n` +
+`CREATE POLICY "Allow public update projects" ON projects FOR UPDATE USING (true);\n` +
+`CREATE POLICY "Allow public delete projects" ON projects FOR DELETE USING (true);\n\n` +
+`CREATE POLICY "Allow public read project_pricelist" ON project_pricelist FOR SELECT USING (true);\n` +
+`CREATE POLICY "Allow public insert project_pricelist" ON project_pricelist FOR INSERT WITH CHECK (true);\n` +
+`CREATE POLICY "Allow public update project_pricelist" ON project_pricelist FOR UPDATE USING (true);\n` +
+`CREATE POLICY "Allow public delete project_pricelist" ON project_pricelist FOR DELETE USING (true);\n\n` +
+`CREATE POLICY "Allow public read budgeting_project" ON budgeting_project FOR SELECT USING (true);\n` +
+`CREATE POLICY "Allow public insert budgeting_project" ON budgeting_project FOR INSERT WITH CHECK (true);\n` +
+`CREATE POLICY "Allow public update budgeting_project" ON budgeting_project FOR UPDATE USING (true);\n` +
+`CREATE POLICY "Allow public delete budgeting_project" ON budgeting_project FOR DELETE USING (true);`;
+            }
+        }
+
+        function copySqlCode() {
+            const el = document.getElementById('ddl-sql-code');
+            if (el) {
+                el.select();
+                document.execCommand('copy');
+                alert("Script SQL berhasil disalin ke clipboard!");
+            }
+        }
+
+        // ==========================================
+        //  FORMATTING & INTERFACES HELPERS
+        // ==========================================
+        function formatRupiah(num) {
+            if (num === undefined || num === null) return 'Rp 0';
+            return 'Rp ' + Number(num).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function toggleInputAssetInput() {
+            const isAsset = document.getElementById('input-is-asset').checked;
+            const container = document.getElementById('input-dep-container');
+            if (container) {
+                if (isAsset) container.classList.remove('hidden');
+                else container.classList.add('hidden');
+            }
+        }
+
+        function togglePlAssetInput() {
+            const isAsset = document.getElementById('pl-is-asset').checked;
+            const container = document.getElementById('pl-dep-container');
+            if (container) {
+                if (isAsset) container.classList.remove('hidden');
+                else container.classList.add('hidden');
+            }
+        }
+
+        function updateSummaryCards(data) {
+            const totalBudget = data.reduce((acc, curr) => acc + (curr.jumlah * curr.harga_satuan), 0);
+            const totalItems = data.length;
+            
+            const dashTotalBudget = document.getElementById('dash-total-budget');
+            const dashTotalItems = document.getElementById('dash-total-items');
+            
+            if (dashTotalBudget) dashTotalBudget.textContent = formatRupiah(totalBudget);
+            if (dashTotalItems) dashTotalItems.textContent = `${totalItems} Item`;
+        }
+
+        // Autocomplete autofill ketika memilih Master Item
+        function handleNamaInput(val) {
+            const match = localPricelistData.find(item => item.nama_barang.toLowerCase() === val.toLowerCase());
+            if (match) {
+                document.getElementById('input-kategori').value = match.kategori;
+                document.getElementById('input-vendor').value = match.nama_vendor || '';
+                document.getElementById('input-harga').value = match.harga_estimasi;
+                document.getElementById('input-manpower-ratio-hidden').value = match.manpower_ratio || 0;
+                
+                const isAssetChk = document.getElementById('input-is-asset');
+                const depTahun = document.getElementById('input-dep-tahun');
+                
+                if (isAssetChk) {
+                    isAssetChk.checked = match.is_asset;
+                    toggleInputAssetInput();
+                }
+                if (depTahun && match.is_asset) {
+                    depTahun.value = match.masa_depresiasi || 5;
+                }
+            } else {
+                document.getElementById('input-manpower-ratio-hidden').value = 0;
+            }
+        }
+
+        // ==========================================
+        //  CRUD PROYEK
+        // ==========================================
+        async function fetchProjectsAndDefault() {
+            try {
+                const data = await dbSelect('projects', { order: ['created_at', false] });
+                localProjectsData = data || [];
+                
+                document.getElementById('db-schema-warning').classList.add('hidden');
+
+                if (localProjectsData.length === 0) {
+                    await dbInsert('projects', { 
+                        name: 'Proyek Utama Pertama', 
+                        is_default: true, 
+                        manpower_enabled: false, 
+                        manpower_count: 1 
+                    });
+                    const refreshedData = await dbSelect('projects', { order: ['created_at', false] });
+                    localProjectsData = refreshedData || [];
+                }
+
+                const defaultProject = localProjectsData.find(p => p.is_default === true) || localProjectsData[0];
+                if (defaultProject) {
+                    activeProjectId = defaultProject.id;
+                }
+
+                renderProjectsTable();
+                syncProjectManpowerFields();
+                await fetchData();
+                
+                // Sinkronisasi otomatis saat pertama kali dibuka jika otomatisasi manpower aktif
+                if (defaultProject && defaultProject.manpower_enabled) {
+                    await syncManpowerQuantities();
+                }
+                await updateDashboard();
+            } catch (err) {
+                console.error("Gagal membaca projek:", err);
+                if (err.message && (err.message.includes('relation') || err.message.includes('not found') || err.message.includes('404'))) {
+                    showDbSchemaWarning();
+                }
+                if (!isUsingFallback) {
+                    console.warn("Mengalihkan otomatis ke mode penyimpanan lokal.");
+                    switchToFallbackMode("Koneksi Gagal");
+                }
+            }
+        }
+
+        function renderProjectsTable() {
+            const tbody = document.getElementById('projects-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            localProjectsData.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition text-slate-700";
+
+                const isDefaultBadge = p.is_default 
+                    ? `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-100 flex items-center justify-center gap-1 max-w-[120px] mx-auto"><i class="fa-solid fa-circle-check"></i> Default</span>`
+                    : `<button onclick="setProjectAsDefault('${p.id}')" class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-full text-xs font-bold transition flex items-center justify-center gap-1 max-w-[120px] mx-auto">Set Default</button>`;
+
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-slate-800">${p.name}</td>
+                    <td class="p-4 text-center">${isDefaultBadge}</td>
+                    <td class="p-4 text-slate-500">${new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    <td class="p-4 text-center flex justify-center gap-2">
+                        <button onclick="editProjectForm('${p.id}', '${p.name}')" class="p-1.5 text-indigo-500 hover:text-indigo-700 transition" title="Edit Nama">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deleteProject('${p.id}', '${p.name}')" class="p-1.5 text-red-500 hover:text-red-700 transition" title="Hapus Proyek">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function setProjectAsDefault(id) {
+            try {
+                if (!isUsingFallback) {
+                    await supabaseClient.from('projects').update({ is_default: false }).not('id', 'is', null);
+                    await supabaseClient.from('projects').update({ is_default: true }).eq('id', id);
+                } else {
+                    let data = JSON.parse(localStorage.getItem('gmi_projects') || '[]');
+                    data = data.map(p => ({ ...p, is_default: p.id == id }));
+                    localStorage.setItem('gmi_projects', JSON.stringify(data));
+                }
+                await fetchProjectsAndDefault();
+            } catch (err) {
+                alert("Gagal menetapkan default: " + err.message);
+            }
+        }
+
+        function editProjectForm(id, name) {
+            document.getElementById('project-id-input').value = id;
+            document.getElementById('project-name-form').value = name;
+        }
+
+        function resetProjectForm() {
+            document.getElementById('project-id-input').value = '';
+            document.getElementById('project-name-form').value = '';
+        }
+
+        async function handleProjectSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('project-id-input').value;
+            const name = document.getElementById('project-name-form').value.trim();
+
+            try {
+                if (id) {
+                    await dbUpdate('projects', { name }, id);
+                } else {
+                    await dbInsert('projects', { name, is_default: false, manpower_enabled: false, manpower_count: 1 });
+                }
+                resetProjectForm();
+                await fetchProjectsAndDefault();
+            } catch (err) {
+                alert("Gagal memproses proyek: " + err.message);
+            }
+        }
+
+        async function deleteProject(id, name) {
+            if (localProjectsData.length <= 1) {
+                alert("Anda tidak dapat menghapus satu-satunya proyek yang tersisa.");
+                return;
+            }
+            if (!confirm(`Hapus proyek "${name}"?\nSeluruh rincian anggaran proyek ini akan ikut terhapus.`)) return;
+
+            try {
+                await dbDelete('projects', id);
+                await fetchProjectsAndDefault();
+            } catch (err) {
+                alert("Gagal menghapus proyek: " + err.message);
+            }
+        }
+
+        // ==========================================
+        //  PENGELOLAAN RASIO MANPOWER & SINKRONISASI CO-INPUT CO-EXISTING
+        // ==========================================
+        function syncProjectManpowerFields() {
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            if (!activeProject) return;
+
+            const enabledCheckbox = document.getElementById('project-manpower-enabled');
+            const countInput = document.getElementById('project-manpower-count');
+            const countInputDash = document.getElementById('dash-manpower-input');
+            const container = document.getElementById('manpower-settings');
+
+            if (enabledCheckbox) enabledCheckbox.checked = activeProject.manpower_enabled;
+            if (countInput) countInput.value = activeProject.manpower_count;
+            if (countInputDash) countInputDash.value = activeProject.manpower_count;
+
+            if (container) {
+                container.classList.remove('hidden'); // Selalu tampilkan input agar sinkronisasi terbaca
+            }
+        }
+
+        async function toggleProjectManpower() {
+            if (!activeProjectId) return;
+            const enabled = document.getElementById('project-manpower-enabled').checked;
+
+            try {
+                await dbUpdate('projects', { manpower_enabled: enabled }, activeProjectId);
+                const index = localProjectsData.findIndex(p => p.id === activeProjectId);
+                if (index !== -1) {
+                    localProjectsData[index].manpower_enabled = enabled;
+                }
+                syncProjectManpowerFields();
+
+                if (enabled) {
+                    await syncManpowerQuantities();
+                } else {
+                    await fetchData();
+                }
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal memperbarui status manpower: " + err.message);
+            }
+        }
+
+        async function updateProjectManpowerCount(val) {
+            const count = parseInt(val) || 1;
+            if (!activeProjectId) return;
+
+            try {
+                await dbUpdate('projects', { manpower_count: count, manpower_enabled: true }, activeProjectId);
+                const index = localProjectsData.findIndex(p => p.id === activeProjectId);
+                if (index !== -1) {
+                    localProjectsData[index].manpower_count = count;
+                    localProjectsData[index].manpower_enabled = true;
+                }
+
+                const enabledCheckbox = document.getElementById('project-manpower-enabled');
+                const countInputBudget = document.getElementById('project-manpower-count');
+                const countInputDash = document.getElementById('dash-manpower-input');
+                const container = document.getElementById('manpower-settings');
+
+                if (enabledCheckbox) enabledCheckbox.checked = true;
+                if (countInputBudget) countInputBudget.value = count;
+                if (countInputDash) countInputDash.value = count;
+                if (container) container.classList.remove('hidden');
+
+                await syncManpowerQuantities();
+                await fetchData();
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal merubah kuantitas manpower: " + err.message);
+            }
+        }
+
+        async function syncManpowerQuantities() {
+            if (!activeProjectId) return;
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            if (!activeProject || !activeProject.manpower_enabled) return;
+
+            const updates = [];
+            localBudgetData.forEach(item => {
+                const ratio = parseFloat(item.manpower_ratio) || 0;
+                if (ratio > 0) {
+                    const expectedQty = Math.max(1, Math.round(activeProject.manpower_count * ratio));
+                    if (parseInt(item.jumlah) !== expectedQty) {
+                        updates.push(
+                            dbUpdate('budgeting_project', { jumlah: expectedQty }, item.id)
+                        );
+                    }
+                }
+            });
+
+            if (updates.length > 0) {
+                await Promise.all(updates);
+                
+                const freshData = await dbSelect('budgeting_project', {
+                    eq: ['project_id', activeProjectId],
+                    order: ['created_at', false]
+                });
+                localBudgetData = freshData || [];
+                applyBudgetSortSilent();
+            }
+        }
+
+        // ==========================================
+        //  TAB SYSTEM CONTROL
+        // ==========================================
+        function switchTab(tab) {
+            currentTab = tab;
+            const tabs = ['dashboard', 'budgeting', 'pricelist', 'operasional', 'projects', 'ratio-calc'];
+            
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const targetId = t === 'operasional' ? 'screen-operasional' : `screen-${t}`;
+                const el = document.getElementById(targetId);
+                
+                if (btn) {
+                    btn.className = "flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50";
+                }
+                if (el) {
+                    el.classList.add('hidden');
+                }
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tab}`);
+            const targetActiveId = tab === 'operasional' ? 'screen-operasional' : `screen-${tab}`;
+            const activeScreen = document.getElementById(targetActiveId);
+
+            if (activeBtn) {
+                if (tab === 'dashboard') {
+                    activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-indigo-600 text-white shadow";
+                } else if (tab === 'pricelist') {
+                    activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-emerald-600 text-white shadow";
+                } else if (tab === 'projects') {
+                    activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-slate-900 text-white shadow";
+                } else if (tab === 'ratio-calc') {
+                    activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-amber-600 text-white shadow";
+                } else {
+                    activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm";
+                }
+            }
+            if (activeScreen) {
+                activeScreen.classList.remove('hidden');
+            }
+
+            if (tab === 'dashboard') {
+                updateDashboard();
+            } else if (tab === 'budgeting') {
+                fetchData();
+            } else if (tab === 'pricelist') {
+                fetchPricelist();
+            } else if (tab === 'ratio-calc') {
+                runRatioSimulation();
+            }
+        }
+
+        // ==========================================
+        //  MODE EDIT QUANTITY MASSAL (CHECKBOX)
+        // ==========================================
+        function toggleBulkEditMode() {
+            bulkEditMode = !bulkEditMode;
+            const thCheckbox = document.getElementById('th-bulk-checkbox');
+            const bulkBar = document.getElementById('bulk-edit-bar');
+            const btnToggle = document.getElementById('btn-toggle-bulk-mode');
+
+            if (bulkEditMode) {
+                if (thCheckbox) thCheckbox.classList.remove('hidden');
+                if (bulkBar) bulkBar.classList.remove('hidden');
+                btnToggle.innerHTML = `<i class="fa-solid fa-xmark"></i> Keluar Mode Massal`;
+                btnToggle.className = "px-3.5 py-2 border border-red-200 text-red-700 hover:bg-red-50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white shadow-sm";
+            } else {
+                if (thCheckbox) thCheckbox.classList.add('hidden');
+                if (bulkBar) bulkBar.classList.add('hidden');
+                btnToggle.innerHTML = `<i class="fa-solid fa-list-check"></i> Edit Qty Massal`;
+                btnToggle.className = "px-3.5 py-2 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white shadow-sm";
+            }
+            renderTable(localBudgetData);
+        }
+
+        function toggleSelectAllBudget(checked) {
+            const checkboxes = document.querySelectorAll('.bulk-item-check');
+            checkboxes.forEach(chk => chk.checked = checked);
+        }
+
+        async function applyBulkQtyUpdate() {
+            const newQty = parseInt(document.getElementById('bulk-qty-input').value) || 1;
+            const selectedIds = [];
+            const checkboxes = document.querySelectorAll('.bulk-item-check:checked');
+
+            checkboxes.forEach(chk => {
+                selectedIds.push(parseInt(chk.value));
+            });
+
+            if (selectedIds.length === 0) {
+                alert("Pilih minimal satu barang anggaran terlebih dahulu.");
+                return;
+            }
+
+            if (!confirm(`Perbarui kuantitas ${selectedIds.length} item anggaran menjadi ${newQty}?`)) return;
+
+            try {
+                const updates = selectedIds.map(id => {
+                    return dbUpdate('budgeting_project', { jumlah: newQty }, id);
+                });
+
+                await Promise.all(updates);
+                alert("Sukses memperbarui kuantitas.");
+                toggleBulkEditMode();
+                await fetchData();
+            } catch (err) {
+                alert("Gagal memperbarui massal: " + err.message);
+            }
+        }
+
+        // ==========================================
+        //  LOGIKA SELEKSI CEKLIST MASSAL MASTER PRICELIST
+        // ==========================================
+        function toggleSelectAllPricelist(checked) {
+            const checkboxes = document.querySelectorAll('.pl-item-check');
+            checkboxes.forEach(chk => chk.checked = checked);
+        }
+
+        async function applyBulkPricelistUse() {
+            if (!activeProjectId) {
+                alert("Buat atau pilih proyek aktif terlebih dahulu.");
+                return;
+            }
+
+            const checkboxes = document.querySelectorAll('.pl-item-check:checked');
+            const selectedIds = Array.from(checkboxes).map(chk => parseInt(chk.value));
+
+            if (selectedIds.length === 0) {
+                alert("Pilih minimal satu item katalog terlebih dahulu.");
+                return;
+            }
+
+            if (!confirm(`Salin ${selectedIds.length} item ke Rencana Anggaran?`)) return;
+
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const isManpowerAutomated = activeProject ? activeProject.manpower_enabled : false;
+            const manpowerCount = activeProject ? activeProject.manpower_count : 1;
+
+            const inserts = [];
+            selectedIds.forEach(id => {
+                const match = localPricelistData.find(item => item.id === id);
+                if (match) {
+                    let jumlah = 1;
+                    if (isManpowerAutomated && match.manpower_ratio > 0) {
+                        jumlah = Math.max(1, Math.round(manpowerCount * match.manpower_ratio));
+                    }
+                    inserts.push({
+                        project_id: activeProjectId,
+                        kategori: match.kategori,
+                        nama_barang: match.nama_barang,
+                        nama_vendor: match.nama_vendor || '-',
+                        is_asset: match.is_asset,
+                        masa_depresiasi: match.masa_depresiasi,
+                        jumlah: jumlah,
+                        harga_satuan: match.harga_estimasi,
+                        deskripsi: match.deskripsi || "",
+                        manpower_ratio: match.manpower_ratio || 0
+                    });
+                }
+            });
+
+            try {
+                await dbInsert('budgeting_project', inserts);
+                alert(`Berhasil menambahkan ${selectedIds.length} item terpilih.`);
+                
+                const selectAllCheckbox = document.getElementById('pl-select-all');
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                toggleSelectAllPricelist(false);
+
+                await fetchData();
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal menyalin item: " + err.message);
+            }
+        }
+
+        // ==========================================
+        //  CRUD RENCANA ANGGARAN (PENGURAIAN DETIL SETIAP KOLOM)
+        // ==========================================
+        async function fetchData() {
+            if (!activeProjectId) return;
+
+            try {
+                const data = await dbSelect('budgeting_project', {
+                    eq: ['project_id', activeProjectId],
+                    order: ['created_at', false]
+                });
+
+                const filterInput = document.getElementById('budget-filter-input');
+                if (filterInput) filterInput.value = '';
+
+                localBudgetData = data || []; 
+                applyBudgetSortSilent();
+                renderTable(localBudgetData);
+                updateSummaryCards(localBudgetData);
+            } catch (err) {
+                console.error("Gagal membaca data anggaran:", err);
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('budget-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="12" class="p-8 text-center text-slate-400">
+                            Belum ada rincian anggaran. Tambahkan belanja baru melalui form kiri.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition";
+                tr.id = `row-${item.id}`;
+
+                const totalHarga = item.jumlah * item.harga_satuan;
+
+                const tdCheckbox = bulkEditMode 
+                    ? `<td class="p-4 text-center"><input type="checkbox" value="${item.id}" class="bulk-item-check w-4 h-4 rounded text-indigo-600 border-slate-300"></td>`
+                    : `<td class="p-4 hidden"></td>`;
+
+                if (activeEditRowId === item.id) {
+                    tr.innerHTML = `
+                        ${tdCheckbox}
+                        <td class="p-3">
+                            <select id="edit-kategori-${item.id}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                                <option value="Peralatan" ${item.kategori === 'Peralatan' ? 'selected' : ''}>Peralatan</option>
+                                <option value="Perlengkapan" ${item.kategori === 'Perlengkapan' ? 'selected' : ''}>Perlengkapan</option>
+                                <option value="Operasional" ${item.kategori === 'Operasional' ? 'selected' : ''}>Operasional</option>
+                                <option value="Pemasaran" ${item.kategori === 'Pemasaran' ? 'selected' : ''}>Pemasaran</option>
+                                <option value="Sewa & Renovasi" ${item.kategori === 'Sewa & Renovasi' ? 'selected' : ''}>Sewa & Renovasi</option>
+                                <option value="Handstool" ${item.kategori === 'Handstool' ? 'selected' : ''}>Handstool</option>
+                                <option value="Special Tools" ${item.kategori === 'Special Tools' ? 'selected' : ''}>Special Tools</option>
+                                <option value="APD" ${item.kategori === 'APD' ? 'selected' : ''}>APD</option>
+                                <option value="Lainnya" ${item.kategori === 'Lainnya' ? 'selected' : ''}>Lainnya</option>
+                            </select>
+                        </td>
+                        <td class="p-3">
+                            <input type="text" id="edit-nama-${item.id}" value="${item.nama_barang}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3">
+                            <input type="text" id="edit-vendor-${item.id}" value="${item.nama_vendor || '-'}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3">
+                            <input type="number" id="edit-qty-${item.id}" value="${item.jumlah}" min="1" class="w-full px-2 py-1 border rounded text-center text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3">
+                            <input type="number" id="edit-harga-${item.id}" value="${item.harga_satuan}" min="0" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3 font-semibold text-slate-700 text-xs">
+                            ${formatRupiah(totalHarga)}
+                        </td>
+                        <td class="p-3 text-xs text-slate-500">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
+                        <td class="p-3 text-xs text-slate-500 text-center">${item.is_asset ? `${item.masa_depresiasi || 5} Tahun` : '-'}</td>
+                        <td class="p-3 text-xs text-slate-500 text-center">${item.manpower_ratio || '0'}</td>
+                        <td class="p-3">
+                            <input type="text" id="edit-deskripsi-${item.id}" value="${item.deskripsi || ''}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3 text-center flex justify-center gap-1">
+                            <button onclick="saveEdit(${item.id})" class="p-1 px-2 bg-emerald-500 text-white rounded text-xs hover:bg-emerald-600 transition" title="Simpan">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="cancelEdit()" class="p-1 px-2 bg-slate-400 text-white rounded text-xs hover:bg-slate-500 transition" title="Batal">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        ${tdCheckbox}
+                        <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
+                        <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
+                        <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
+                        <td class="p-4 text-center text-slate-600 font-bold">${item.jumlah}</td>
+                        <td class="p-4 text-slate-600">${formatRupiah(item.harga_satuan)}</td>
+                        <td class="p-4 font-bold text-slate-900">${formatRupiah(totalHarga)}</td>
+                        <td class="p-4 text-xs font-semibold ${item.is_asset ? 'text-indigo-600' : 'text-slate-400'}">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
+                        <td class="p-4 text-center text-xs text-slate-500">${item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-'}</td>
+                        <td class="p-4 text-center text-xs font-bold text-emerald-600 bg-emerald-50/50 rounded-lg">${item.manpower_ratio || '0'}</td>
+                        <td class="p-4 text-slate-500 text-xs truncate max-w-[120px]" title="${item.deskripsi || ''}">${item.deskripsi || '-'}</td>
+                        <td class="p-4 text-center flex justify-center gap-2">
+                            <button onclick="enableEditMode(${item.id})" class="text-indigo-500 hover:text-indigo-700 transition" title="Edit">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-700 transition" title="Hapus">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+
+            updateSortIcons('budget', budgetSortKey, budgetSortDirection);
+        }
+
+        function enableEditMode(id) {
+            activeEditRowId = id;
+            renderTable(localBudgetData);
+        }
+
+        function cancelEdit() {
+            activeEditRowId = null;
+            renderTable(localBudgetData);
+        }
+
+        async function saveEdit(id) {
+            const kategori = document.getElementById(`edit-kategori-${id}`).value;
+            const nama_barang = document.getElementById(`edit-nama-${id}`).value.trim();
+            const nama_vendor = document.getElementById(`edit-vendor-${id}`).value.trim();
+            const jumlah = parseInt(document.getElementById(`edit-qty-${id}`).value) || 1;
+            const harga_satuan = parseFloat(document.getElementById(`edit-harga-${id}`).value) || 0;
+            const deskripsi = document.getElementById(`edit-deskripsi-${id}`).value.trim();
+
+            try {
+                await dbUpdate('budgeting_project', { kategori, nama_barang, nama_vendor, jumlah, harga_satuan, deskripsi }, id);
+                activeEditRowId = null;
+                await fetchData();
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal memperbarui item: " + err.message);
+            }
+        }
+
+        async function deleteItem(id) {
+            if (!confirm("Hapus item anggaran ini?")) return;
+
+            try {
+                await dbDelete('budgeting_project', id);
+                await fetchData();
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal menghapus item: " + err.message);
+            }
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            if (!activeProjectId) {
+                alert("Buat atau pilih proyek aktif terlebih dahulu.");
+                return;
+            }
+
+            const nama_barang = document.getElementById('input-nama').value.trim();
+            const kategori = document.getElementById('input-kategori').value;
+            const nama_vendor = document.getElementById('input-vendor').value.trim() || '-';
+            const is_asset = document.getElementById('input-is-asset').checked;
+            const masa_depresiasi = is_asset ? parseInt(document.getElementById('input-dep-tahun').value) || 5 : 5;
+            const jumlah = parseInt(document.getElementById('input-qty').value) || 1;
+            const harga_satuan = parseFloat(document.getElementById('input-harga').value) || 0;
+            const deskripsi = document.getElementById('input-deskripsi').value.trim();
+            const manpower_ratio = parseFloat(document.getElementById('input-manpower-ratio-hidden').value) || 0;
+
+            try {
+                await dbInsert('budgeting_project', {
+                    project_id: activeProjectId,
+                    kategori,
+                    nama_barang,
+                    nama_vendor,
+                    is_asset,
+                    masa_depresiasi,
+                    jumlah,
+                    harga_satuan,
+                    deskripsi,
+                    manpower_ratio
+                });
+
+                document.getElementById('budget-form').reset();
+                document.getElementById('input-is-asset').checked = false;
+                document.getElementById('input-manpower-ratio-hidden').value = 0;
+                toggleInputAssetInput();
+                
+                await fetchData();
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal menyimpan anggaran: " + err.message);
+            }
+        }
+
+        // ==========================================
+        //  MASTER PRICELIST & EXCEL OPERATIONS
+        // ==========================================
+        async function fetchPricelist() {
+            const tbody = document.getElementById('pricelist-tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="p-8 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner animate-spin text-lg mb-2 block"></i> Membaca Katalog Pricelist...
+                    </td>
+                </tr>
+            `;
+
+            try {
+                const data = await dbSelect('project_pricelist', { order: ['nama_barang', true] });
+                const filterInput = document.getElementById('pricelist-filter-input');
+                if (filterInput) filterInput.value = '';
+
+                localPricelistData = data || []; 
+                applyPricelistSortSilent();
+                renderPricelistTable(localPricelistData);
+                populateAutocomplete(); 
+            } catch (err) {
+                console.error("Gagal membaca pricelist:", err);
+                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Gagal Membaca Data Katalog.</td></tr>`;
+            }
+        }
+
+        async function fetchPricelistSilent() {
+            try {
+                const data = await dbSelect('project_pricelist', { order: ['nama_barang', true] });
+                localPricelistData = data || []; 
+                populateAutocomplete();
+            } catch (err) {
+                localPricelistData = [];
+            }
+        }
+
+        function populateAutocomplete() {
+            const datalist = document.getElementById('pricelist-options');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            
+            if (!Array.isArray(localPricelistData)) return;
+            localPricelistData.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.nama_barang;
+                const assetText = item.is_asset ? ` [Aset - ${item.masa_depresiasi} Thn]` : '';
+                option.textContent = `${item.kategori} - ${formatRupiah(item.harga_estimasi)}${assetText} [Vendor: ${item.nama_vendor || '-'}]`;
+                datalist.appendChild(option);
+            });
+        }
+
+        function renderPricelistTable(data) {
+            const tbody = document.getElementById('pricelist-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400">Katalog pricelist masih kosong.</td></tr>`;
+                return;
+            }
+
+            const selectAllCheckbox = document.getElementById('pl-select-all');
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition";
+                tr.id = `pl-row-${item.id}`;
+
+                const tdCheckbox = `<td class="p-4 text-center"><input type="checkbox" value="${item.id}" class="pl-item-check w-4 h-4 rounded text-emerald-600 border-slate-300" ${activePricelistEditRowId === item.id ? 'disabled' : ''}></td>`;
+
+                if (activePricelistEditRowId === item.id) {
+                    tr.innerHTML = `
+                        ${tdCheckbox}
+                        <td class="p-3">
+                            <select id="edit-pl-kategori-${item.id}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                                <option value="Peralatan" ${item.kategori === 'Peralatan' ? 'selected' : ''}>Peralatan</option>
+                                <option value="Perlengkapan" ${item.kategori === 'Perlengkapan' ? 'selected' : ''}>Perlengkapan</option>
+                                <option value="Operasional" ${item.kategori === 'Operasional' ? 'selected' : ''}>Operasional</option>
+                                <option value="Pemasaran" ${item.kategori === 'Pemasaran' ? 'selected' : ''}>Pemasaran</option>
+                                <option value="Sewa & Renovasi" ${item.kategori === 'Sewa & Renovasi' ? 'selected' : ''}>Sewa & Renovasi</option>
+                                <option value="Handstool" ${item.kategori === 'Handstool' ? 'selected' : ''}>Handstool</option>
+                                <option value="Special Tools" ${item.kategori === 'Special Tools' ? 'selected' : ''}>Special Tools</option>
+                                <option value="APD" ${item.kategori === 'APD' ? 'selected' : ''}>APD</option>
+                                <option value="Lainnya" ${item.kategori === 'Lainnya' ? 'selected' : ''}>Lainnya</option>
+                            </select>
+                        </td>
+                        <td class="p-3">
+                            <input type="text" id="edit-pl-nama-${item.id}" value="${item.nama_barang}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3">
+                            <input type="text" id="edit-pl-vendor-${item.id}" value="${item.nama_vendor || ''}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3">
+                            <input type="number" id="edit-pl-harga-${item.id}" value="${item.harga_estimasi}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3 text-xs text-slate-500">
+                            <div class="flex items-center gap-1.5">
+                                <input type="checkbox" id="edit-pl-is-asset-${item.id}" ${item.is_asset ? 'checked' : ''} onchange="toggleEditPlAssetInput(${item.id})">
+                                <span>Aset</span>
+                            </div>
+                        </td>
+                        <td class="p-3 text-xs text-slate-500 text-center">
+                            <input type="number" id="edit-pl-dep-tahun-${item.id}" value="${item.masa_depresiasi || 5}" min="1" max="50" class="w-16 px-1 py-0.5 border rounded text-center text-xs focus:outline-none ${item.is_asset ? '' : 'hidden'}" placeholder="Tahun">
+                        </td>
+                        <td class="p-3 text-xs text-center">
+                            <input type="number" id="edit-pl-manpower-ratio-${item.id}" value="${item.manpower_ratio || 0}" step="0.1" class="w-16 px-1 py-0.5 border rounded text-center text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3">
+                            <input type="text" id="edit-pl-deskripsi-${item.id}" value="${item.deskripsi || ''}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3 text-center flex justify-center gap-1">
+                            <button onclick="savePricelistEdit(${item.id})" class="p-1.5 px-2.5 bg-emerald-500 text-white rounded-lg text-xs hover:bg-emerald-600 transition" title="Simpan">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="cancelPricelistEdit()" class="p-1.5 px-2.5 bg-slate-400 text-white rounded-lg text-xs hover:bg-slate-500 transition" title="Batal">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        ${tdCheckbox}
+                        <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
+                        <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
+                        <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
+                        <td class="p-4 text-emerald-600 font-bold">${formatRupiah(item.harga_estimasi)}</td>
+                        <td class="p-4 text-xs font-semibold ${item.is_asset ? 'text-indigo-600' : 'text-slate-400'}">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
+                        <td class="p-4 text-center text-xs text-slate-500">${item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-'}</td>
+                        <td class="p-4 text-center text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">${item.manpower_ratio || '0'}</td>
+                        <td class="p-4 text-slate-500 text-xs truncate max-w-[120px]" title="${item.deskripsi || ''}">${item.deskripsi || '-'}</td>
+                        <td class="p-4 text-center flex justify-center gap-1.5">
+                            <button onclick="addPricelistToBudgetById(${item.id})" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm font-sans">
+                                <i class="fa-solid fa-cart-plus"></i> Pakai
+                            </button>
+                            <button onclick="enablePricelistEditMode(${item.id})" class="text-indigo-500 hover:text-indigo-700 transition" title="Edit Master">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deletePricelistItem(${item.id})" class="p-1 text-red-400 hover:text-red-600 transition" title="Hapus Master">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+
+            updateSortIcons('pricelist', pricelistSortKey, pricelistSortDirection);
+        }
+
+        function enablePricelistEditMode(id) {
+            activePricelistEditRowId = id;
+            renderPricelistTable(localPricelistData);
+        }
+
+        function cancelPricelistEdit() {
+            activePricelistEditRowId = null;
+            renderPricelistTable(localPricelistData);
+        }
+
+        function toggleEditPlAssetInput(id) {
+            const isAsset = document.getElementById(`edit-pl-is-asset-${id}`).checked;
+            const depInput = document.getElementById(`edit-pl-dep-tahun-${id}`);
+            if (depInput) {
+                if (isAsset) depInput.classList.remove('hidden');
+                else depInput.classList.add('hidden');
+            }
+        }
+
+        async function savePricelistEdit(id) {
+            const kategori = document.getElementById(`edit-pl-kategori-${id}`).value;
+            const nama_barang = document.getElementById(`edit-pl-nama-${id}`).value.trim();
+            const nama_vendor = document.getElementById(`edit-pl-vendor-${id}`).value.trim();
+            const harga_estimasi = parseFloat(document.getElementById(`edit-pl-harga-${id}`).value) || 0;
+            const deskripsi = document.getElementById(`edit-pl-deskripsi-${id}`).value.trim();
+            const is_asset = document.getElementById(`edit-pl-is-asset-${id}`).checked;
+            const masa_depresiasi = is_asset ? parseInt(document.getElementById(`edit-pl-dep-tahun-${id}`).value) || 5 : 5;
+            const manpower_ratio = parseFloat(document.getElementById(`edit-pl-manpower-ratio-${id}`).value) || 0;
+
+            try {
+                await dbUpdate('project_pricelist', { 
+                    kategori, 
+                    nama_barang, 
+                    nama_vendor, 
+                    harga_estimasi, 
+                    deskripsi, 
+                    is_asset, 
+                    masa_depresiasi, 
+                    manpower_ratio 
+                }, id);
+                
+                activePricelistEditRowId = null;
+                await fetchPricelist(); 
+            } catch (err) {
+                alert("Gagal memperbarui master item: " + err.message);
+            }
+        }
+
+        async function handlePricelistSubmit(event) {
+            event.preventDefault();
+
+            const kategori = document.getElementById('pl-kategori').value;
+            const nama_barang = document.getElementById('pl-nama').value.trim();
+            const nama_vendor = document.getElementById('pl-vendor').value.trim() || '-';
+            const is_asset = document.getElementById('pl-is-asset').checked;
+            const masa_depresiasi = is_asset ? parseInt(document.getElementById('pl-dep-tahun').value) || 5 : 5;
+            const manpower_ratio = parseFloat(document.getElementById('pl-manpower-ratio').value) || 0;
+            const harga_estimasi = parseFloat(document.getElementById('pl-harga').value) || 0;
+            const deskripsi = document.getElementById('pl-deskripsi').value.trim();
+
+            try {
+                await dbInsert('project_pricelist', { kategori, nama_barang, nama_vendor, is_asset, masa_depresiasi, manpower_ratio, harga_estimasi, deskripsi });
+
+                document.getElementById('pricelist-form').reset();
+                document.getElementById('pl-is-asset').checked = false;
+                togglePlAssetInput();
+                await fetchPricelist();
+            } catch (err) {
+                alert("Gagal menyimpan item ke pricelist: " + err.message);
+            }
+        }
+
+        async function addPricelistToBudgetById(id) {
+            if (!activeProjectId) {
+                alert("Buat atau pilih proyek aktif terlebih dahulu.");
+                return;
+            }
+            const match = localPricelistData.find(item => item.id === id);
+            if (!match) return;
+
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const isManpowerAutomated = activeProject ? activeProject.manpower_enabled : false;
+            const manpowerCount = activeProject ? activeProject.manpower_count : 1;
+
+            let jumlah = 1;
+            if (isManpowerAutomated && match.manpower_ratio > 0) {
+                jumlah = Math.max(1, Math.round(manpowerCount * match.manpower_ratio));
+            }
+
+            try {
+                await dbInsert('budgeting_project', {
+                    project_id: activeProjectId,
+                    kategori: match.kategori,
+                    nama_barang: match.nama_barang,
+                    nama_vendor: match.nama_vendor || '-',
+                    is_asset: match.is_asset,
+                    masa_depresiasi: match.masa_depresiasi,
+                    jumlah: jumlah,
+                    harga_satuan: match.harga_estimasi,
+                    deskripsi: match.deskripsi || "",
+                    manpower_ratio: match.manpower_ratio || 0
+                });
+                alert(`Berhasil menambahkan "${match.nama_barang}" ke rencana anggaran.`);
+                await fetchData();
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal menyalin item ke rencana anggaran: " + err.message);
+            }
+        }
+
+        async function deletePricelistItem(id) {
+            if (!confirm("Hapus item master ini dari katalog?")) return;
+            try {
+                await dbDelete('project_pricelist', id);
+                await fetchPricelist();
+            } catch (err) {
+                alert("Gagal menghapus item katalog: " + err.message);
+            }
+        }
+
+        // ==========================================
+        //  PENGURUTAN (SORT) TABEL
+        // ==========================================
+        function sortBudgetTable(key) {
+            if (budgetSortKey === key) {
+                budgetSortDirection = budgetSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                budgetSortKey = key;
+                budgetSortDirection = 'asc';
+            }
+            applyBudgetSortSilent();
+            renderTable(localBudgetData);
+        }
+
+        function applyBudgetSortSilent() {
+            localBudgetData.sort((a, b) => {
+                let valA = a[budgetSortKey];
+                let valB = b[budgetSortKey];
+                if (budgetSortKey === 'total_harga') {
+                    valA = (a.jumlah || 0) * (a.harga_satuan || 0);
+                    valB = (b.jumlah || 0) * (b.harga_satuan || 0);
+                } else if (budgetSortKey === 'jumlah' || budgetSortKey === 'harga_satuan') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                } else {
+                    valA = valA ? valA.toString().toLowerCase() : '';
+                    valB = valB ? valB.toString().toLowerCase() : '';
+                }
+                if (valA < valB) return budgetSortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return budgetSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function sortPricelistTable(key) {
+            if (pricelistSortKey === key) {
+                pricelistSortDirection = pricelistSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                pricelistSortKey = key;
+                pricelistSortDirection = 'asc';
+            }
+            applyPricelistSortSilent();
+            renderPricelistTable(localPricelistData);
+        }
+
+        function applyPricelistSortSilent() {
+            localPricelistData.sort((a, b) => {
+                let valA = a[pricelistSortKey];
+                let valB = b[pricelistSortKey];
+                if (pricelistSortKey === 'harga_estimasi') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                } else {
+                    valA = valA ? valA.toString().toLowerCase() : '';
+                    valB = valB ? valB.toString().toLowerCase() : '';
+                }
+                if (valA < valB) return pricelistSortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return pricelistSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function updateSortIcons(type, activeKey, activeDirection) {
+            const suffix = type === 'budget' ? 'sort-icon-' : 'sort-pl-icon-';
+            const keys = type === 'budget' 
+                ? ['kategori', 'nama_barang', 'nama_vendor', 'jumlah', 'harga_satuan', 'total_harga']
+                : ['kategori', 'nama_barang', 'nama_vendor', 'harga_estimasi'];
+            
+            keys.forEach(k => {
+                const el = document.getElementById(`${suffix}${k}`);
+                if (el) {
+                    if (k === activeKey) {
+                        el.className = activeDirection === 'asc' 
+                            ? "fa-solid fa-sort-up text-[10px] opacity-100 ml-1 text-indigo-600" 
+                            : "fa-solid fa-sort-down text-[10px] opacity-100 ml-1 text-indigo-600";
+                    } else {
+                        el.className = "fa-solid fa-sort text-[10px] opacity-30 ml-1";
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        //  PENYARINGAN (FILTER) TABEL
+        // ==========================================
+        function filterBudgetTable() {
+            const query = document.getElementById('budget-filter-input').value.toLowerCase().trim();
+            if (!query) {
+                renderTable(localBudgetData);
+                return;
+            }
+            const filtered = localBudgetData.filter(item => {
+                return (item.nama_barang || '').toLowerCase().includes(query) ||
+                       (item.kategori || '').toLowerCase().includes(query) ||
+                       (item.nama_vendor || '').toLowerCase().includes(query) ||
+                       (item.deskripsi || '').toLowerCase().includes(query);
+            });
+            renderTable(filtered);
+        }
+
+        function filterPricelistTable() {
+            const query = document.getElementById('pricelist-filter-input').value.toLowerCase().trim();
+            if (!query) {
+                renderPricelistTable(localPricelistData);
+                return;
+            }
+            const filtered = localPricelistData.filter(item => {
+                return (item.nama_barang || '').toLowerCase().includes(query) ||
+                       (item.kategori || '').toLowerCase().includes(query) ||
+                       (item.nama_vendor || '').toLowerCase().includes(query) ||
+                       (item.deskripsi || '').toLowerCase().includes(query);
+            });
+            renderPricelistTable(filtered);
+        }
+
+        // ==========================================
+        //  EKSPOR & IMPOR DATA EXCEL
+        // ==========================================
+        async function exportToExcel() {
+            if (localBudgetData.length === 0) {
+                alert("Tidak ada data anggaran yang dapat diekspor.");
+                return;
+            }
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const projectName = activeProject ? activeProject.name : 'Anggaran';
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Rencana Anggaran');
+
+            worksheet.columns = [
+                { header: 'Kategori', key: 'kategori', width: 20 },
+                { header: 'Nama Barang', key: 'nama_barang', width: 30 },
+                { header: 'Nama Vendor', key: 'nama_vendor', width: 25 },
+                { header: 'Qty', key: 'jumlah', width: 10 },
+                { header: 'Harga Satuan', key: 'harga_satuan', width: 15 },
+                { header: 'Total Harga', key: 'total_harga', width: 18 },
+                { header: 'Tipe Aset', key: 'is_asset', width: 12 },
+                { header: 'Masa Depresiasi (Thn)', key: 'depresiasi', width: 20 },
+                { header: 'Deskripsi', key: 'deskripsi', width: 35 }
+            ];
+
+            worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+            worksheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: '1E3A8A' }
+            };
+
+            localBudgetData.forEach(item => {
+                const total = item.jumlah * item.harga_satuan;
+                worksheet.addRow({
+                    kategori: item.kategori,
+                    nama_barang: item.nama_barang,
+                    nama_vendor: item.nama_vendor || '-',
+                    jumlah: item.jumlah,
+                    harga_satuan: item.harga_satuan,
+                    total_harga: total,
+                    is_asset: item.is_asset ? 'Aset' : 'Habis Pakai',
+                    depresiasi: item.is_asset ? item.masa_depresiasi : '-',
+                    deskripsi: item.deskripsi || ''
+                });
+            });
+
+            const totalBudget = localBudgetData.reduce((sum, item) => sum + (item.jumlah * item.harga_satuan), 0);
+            const totalRow = worksheet.addRow({
+                kategori: 'TOTAL ANGGARAN',
+                total_harga: totalBudget
+            });
+            totalRow.font = { bold: true };
+            worksheet.mergeCells(`A${totalRow.number}:E${totalRow.number}`);
+
+            worksheet.eachRow((row, rowNumber) => {
+                if (rowNumber > 1) {
+                    row.getCell('jumlah').numFmt = '#,##0';
+                    row.getCell('harga_satuan').numFmt = '"Rp "#,##0';
+                    row.getCell('total_harga').numFmt = '"Rp "#,##0';
+                }
+            });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Budget_${projectName.replace(/\s+/g, '_')}.xlsx`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        async function exportPricelistTemplate() {
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Template Master Pricelist');
+
+            worksheet.columns = [
+                { header: 'Kategori', key: 'kategori', width: 20 },
+                { header: 'Nama Barang', key: 'nama_barang', width: 30 },
+                { header: 'Nama Vendor', key: 'nama_vendor', width: 25 },
+                { header: 'Harga Estimasi', key: 'harga_estimasi', width: 18 },
+                { header: 'Apakah Aset (TRUE/FALSE)', key: 'is_asset', width: 25 },
+                { header: 'Masa Depresiasi (Tahun)', key: 'masa_depresiasi', width: 22 },
+                { header: 'Rasio Manpower (0 jika tidak ada)', key: 'manpower_ratio', width: 30 },
+                { header: 'Deskripsi', key: 'deskripsi', width: 35 }
+            ];
+
+            worksheet.addRow({
+                kategori: 'Peralatan',
+                nama_barang: 'Sample Laptop Core i7',
+                nama_vendor: 'PT. Vendor Komputer',
+                harga_estimasi: 15000000,
+                is_asset: 'TRUE',
+                masa_depresiasi: 4,
+                manpower_ratio: 0.5,
+                deskripsi: 'Spesifikasi Core i7, 16GB RAM'
+            });
+
+            worksheet.addRow({
+                kategori: 'APD',
+                nama_barang: 'Helm Proyek SNI',
+                nama_vendor: 'CV. Safety Mandiri',
+                harga_estimasi: 50000,
+                is_asset: 'FALSE',
+                masa_depresiasi: 0,
+                manpower_ratio: 1.0,
+                deskripsi: 'Rasio 1.0 berarti 1 unit per personil'
+            });
+
+            worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+            worksheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: '059669' } 
+            };
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Template_Master_Pricelist.xlsx`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        async function importPricelistExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const buffer = e.target.result;
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(buffer);
+                    const worksheet = workbook.worksheets[0];
+
+                    const imports = [];
+                    worksheet.eachRow((row, rowNumber) => {
+                        if (rowNumber > 1) { 
+                            const kategori = row.getCell(1).value ? row.getCell(1).value.toString().trim() : '';
+                            const nama_barang = row.getCell(2).value ? row.getCell(2).value.toString().trim() : '';
+                            const nama_vendor = row.getCell(3).value ? row.getCell(3).value.toString().trim() : '-';
+                            const harga_estimasi = parseFloat(row.getCell(4).value) || 0;
+                            
+                            let rawAsset = row.getCell(5).value;
+                            let is_asset = false;
+                            if (rawAsset) {
+                                const sAsset = rawAsset.toString().toLowerCase().trim();
+                                is_asset = sAsset === 'true' || sAsset === '1' || sAsset === 'yes' || sAsset === 'ya';
+                            }
+                            
+                            const masa_depresiasi = parseInt(row.getCell(6).value) || 5;
+                            const manpower_ratio = parseFloat(row.getCell(7).value) || 0;
+                            const deskripsi = row.getCell(8).value ? row.getCell(8).value.toString().trim() : '';
+
+                            if (kategori && nama_barang) {
+                                imports.push({
+                                    kategori,
+                                    nama_barang,
+                                    nama_vendor,
+                                    harga_estimasi,
+                                    is_asset,
+                                    masa_depresiasi,
+                                    manpower_ratio,
+                                    deskripsi
+                                });
+                            }
+                        }
+                    });
+
+                    if (imports.length === 0) {
+                        alert("Tidak ada data valid yang ditemukan.");
+                        return;
+                    }
+
+                    if (confirm(`Impor ${imports.length} item dari Excel ke Master Pricelist?`)) {
+                        await dbInsert('project_pricelist', imports);
+                        alert(`Berhasil mengimpor ${imports.length} item.`);
+                        await fetchPricelist();
+                    }
+                } catch (err) {
+                    console.error("Gagal mengimpor Excel:", err);
+                    alert("Terjadi kesalahan pengolahan berkas Excel: " + err.message);
+                } finally {
+                    document.getElementById('excel-import-input').value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ==========================================
+        //  EKSPOR LAPORAN PDF (PDF_AUTOTABLE)
+        // ==========================================
+        function exportToPDF() {
+            if (localBudgetData.length === 0) {
+                alert("Tidak ada data anggaran yang dapat dicetak.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const projectName = activeProject ? activeProject.name : 'Workspace Project';
+            const manpowerCount = activeProject ? activeProject.manpower_count : 1;
+            const manpowerStatus = activeProject && activeProject.manpower_enabled ? `Aktif (${manpowerCount} Orang)` : 'Tidak Aktif';
+
+            doc.setFillColor(15, 23, 42); 
+            doc.rect(0, 0, 210, 35, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text("GMI WORKSPACE - PENGAJUAN ANGGARAN", 14, 15);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(147, 197, 253); 
+            doc.text(`Proyek: ${projectName}  |  Manpower: ${manpowerStatus}`, 14, 22);
+            doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 27);
+
+            doc.setTextColor(51, 65, 85);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text("RINGKASAN RINCIAN BIAYA", 14, 45);
+
+            const totalBudget = localBudgetData.reduce((sum, item) => sum + (item.jumlah * item.harga_satuan), 0);
+            const assetTotal = localBudgetData.filter(item => item.is_asset).reduce((sum, item) => sum + (item.jumlah * item.harga_satuan), 0);
+            const opexTotal = totalBudget - assetTotal;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text(`Total Alokasi Investasi (CapEx): ${formatRupiah(assetTotal)}`, 14, 52);
+            doc.text(`Total Belanja Habis Pakai (OpEx): ${formatRupiah(opexTotal)}`, 14, 57);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text(`GRAND TOTAL ANGGARAN: ${formatRupiah(totalBudget)}`, 14, 63);
+
+            const headers = [['Kategori', 'Nama Barang', 'Vendor', 'Qty', 'Satuan (Rp)', 'Total (Rp)', 'Tipe', 'Depresiasi', 'Rasio']];
+            const rows = localBudgetData.map(item => [
+                item.kategori,
+                item.nama_barang,
+                item.nama_vendor || '-',
+                item.jumlah,
+                Number(item.harga_satuan).toLocaleString('id-ID'),
+                Number(item.jumlah * item.harga_satuan).toLocaleString('id-ID'),
+                item.is_asset ? 'Aset' : 'Habis Pakai',
+                item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-',
+                item.manpower_ratio || '0'
+            ]);
+
+            doc.autoTable({
+                head: headers,
+                body: rows,
+                startY: 70,
+                theme: 'striped',
+                headStyles: { fillColor: [30, 41, 59] }, 
+                styles: { fontSize: 8, cellPadding: 2.5 },
+                columnStyles: {
+                    3: { halign: 'center' },
+                    4: { halign: 'right' },
+                    5: { halign: 'right' },
+                    7: { halign: 'center' },
+                    8: { halign: 'center' }
+                }
+            });
+
+            const finalY = doc.lastAutoTable.finalY + 15;
+            if (finalY + 30 < 297) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.text("Diajukan Oleh,", 14, finalY);
+                doc.text("Disetujui Oleh,", 140, finalY);
+                
+                doc.setFont('helvetica', 'bold');
+                doc.text("Harizal", 14, finalY + 25);
+                doc.text("Management GMI", 140, finalY + 25);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.text("Development Identity", 14, finalY + 29);
+            }
+
+            doc.save(`Pengajuan_Budget_${projectName.replace(/\s+/g, '_')}.pdf`);
+        }
+
+        // ==========================================
+        //  PRESENTATION WINDOW & SLIDES SYSTEM
+        // ==========================================
+        function openPresentation() {
+            if (localBudgetData.length === 0) {
+                alert("Rencana anggaran masih kosong.");
+                return;
+            }
+            document.getElementById('presentation-modal').classList.remove('hidden');
+            currentSlide = 1;
+            updateSlideVisibility();
+            updatePresentationData();
+        }
+
+        function closePresentation() {
+            document.getElementById('presentation-modal').classList.add('hidden');
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+        }
+
+        function updateSlideVisibility() {
+            document.getElementById('slide-1').classList.add('hidden');
+            document.getElementById('slide-2').classList.add('hidden');
+            document.getElementById('slide-3').classList.add('hidden');
+
+            document.getElementById(`slide-${currentSlide}`).classList.remove('hidden');
+
+            document.getElementById('current-slide-num').textContent = currentSlide;
+            document.getElementById('prev-btn').disabled = currentSlide === 1;
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (currentSlide === 3) {
+                nextBtn.innerHTML = `Selesai <i class="fa-solid fa-check"></i>`;
+            } else {
+                nextBtn.innerHTML = `Berikutnya <i class="fa-solid fa-arrow-right"></i>`;
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < 3) {
+                currentSlide++;
+                updateSlideVisibility();
+                if (currentSlide === 2) {
+                    renderPresentationChart();
+                }
+            } else {
+                closePresentation();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlideVisibility();
+                if (currentSlide === 2) {
+                    renderPresentationChart();
+                }
+            }
+        }
+
+        function updatePresentationData() {
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const projectName = activeProject ? activeProject.name : 'Detail Proyek';
+            const manpowerCount = activeProject ? activeProject.manpower_count : 1;
+
+            document.getElementById('pres-project-title').textContent = projectName;
+            const totalBudget = localBudgetData.reduce((sum, item) => sum + (item.jumlah * item.harga_satuan), 0);
+            document.getElementById('pres-total-budget').textContent = formatRupiah(totalBudget);
+            document.getElementById('pres-manpower-stat').textContent = `${manpowerCount} Orang`;
+
+            const categoryBreakdownList = document.getElementById('category-breakdown-list');
+            if (categoryBreakdownList) {
+                categoryBreakdownList.innerHTML = '';
+                const categories = {};
+                localBudgetData.forEach(item => {
+                    const cost = item.jumlah * item.harga_satuan;
+                    categories[item.kategori] = (categories[item.kategori] || 0) + cost;
+                });
+
+                Object.keys(categories).forEach(k => {
+                    const cost = categories[k];
+                    const percent = ((cost / totalBudget) * 100).toFixed(1);
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center text-xs p-2 bg-slate-800 rounded border border-slate-700/50";
+                    div.innerHTML = `<span class="font-bold text-slate-300">${k}</span><span class="text-slate-400">${formatRupiah(cost)} (${percent}%)</span>`;
+                    categoryBreakdownList.appendChild(div);
+                });
+            }
+
+            const assetTotal = localBudgetData.filter(item => item.is_asset).reduce((sum, item) => sum + (item.jumlah * item.harga_satuan), 0);
+            const opexTotal = totalBudget - assetTotal;
+            const capexPercent = totalBudget > 0 ? ((assetTotal / totalBudget) * 100).toFixed(1) : 0;
+            const opexPercent = totalBudget > 0 ? ((opexTotal / totalBudget) * 100).toFixed(1) : 0;
+
+            document.getElementById('pres-capex-percent').textContent = `${capexPercent}%`;
+            document.getElementById('pres-capex-bar').style.width = `${capexPercent}%`;
+            document.getElementById('pres-opex-percent').textContent = `${opexPercent}%`;
+            document.getElementById('pres-opex-bar').style.width = `${opexPercent}%`;
+
+            const apdSummaryEl = document.getElementById('pres-apd-summary');
+            if (apdSummaryEl) {
+                const apdItems = localBudgetData.filter(item => item.kategori === 'APD');
+                if (apdItems.length === 0) {
+                    apdSummaryEl.innerHTML = `
+                        <span class="text-red-400 font-bold block mb-1">🚨 BELUM MEMENUHI STANDAR K3</span>
+                        Tidak ada alokasi Alat Pelindung Diri (APD) terdeteksi. Untuk tim berkapasitas ${manpowerCount} orang, pengadaan APD wajib dicantumkan dalam budget opening.
+                    `;
+                } else {
+                    const totalApdQty = apdItems.reduce((sum, i) => sum + i.jumlah, 0);
+                    apdSummaryEl.innerHTML = `
+                        <span class="text-emerald-400 font-bold block mb-1">✅ STANDAR K3 TERIDENTIFIKASI</span>
+                        Ditemukan ${apdItems.length} tipe item APD dengan total ${totalApdQty} unit kuantitas keselamatan. Struktur perlindungan personil tergolong memadai.
+                    `;
+                }
+            }
+        }
+
+        function renderPresentationChart() {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('category-chart');
+            if (!ctx) return;
+
+            const categories = {};
+            localBudgetData.forEach(item => {
+                const cost = item.jumlah * item.harga_satuan;
+                categories[item.kategori] = (categories[item.kategori] || 0) + cost;
+            });
+
+            const labels = Object.keys(categories);
+            const dataValues = Object.values(categories);
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#64748b'];
+
+            chartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: colors,
+                        borderColor: '#0f172a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#cbd5e1',
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        //  INTERAKTIF SIMULATOR RUMUS RASIO
+        // ==========================================
+        function runRatioSimulation() {
+            const mpInput = document.getElementById('sim-manpower-input');
+            const ratioInput = document.getElementById('sim-ratio-input');
+            
+            if (mpInput && (mpInput.value === "" || mpInput.value == "1")) {
+                const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+                mpInput.value = activeProject ? activeProject.manpower_count : 7;
+            }
+            if (ratioInput && ratioInput.value === "") {
+                ratioInput.value = "1.0";
+            }
+
+            const mpCount = parseInt(mpInput.value) || 0;
+            const ratio = parseFloat(ratioInput.value) || 0;
+
+            const rawCalc = mpCount * ratio;
+            let finalQty = 0;
+            if (ratio > 0) {
+                finalQty = Math.max(1, Math.round(rawCalc));
+            }
+
+            document.getElementById('sim-raw-result').textContent = rawCalc.toFixed(2);
+            document.getElementById('sim-final-result').textContent = `${finalQty} Unit`;
+
+            renderSimVisualization(mpCount, finalQty);
+        }
+
+        function setSimPresetRatio(val) {
+            const ratioInput = document.getElementById('sim-ratio-input');
+            if (ratioInput) {
+                ratioInput.value = val;
+                runRatioSimulation();
+            }
+        }
+
+        function renderSimVisualization(mpCount, finalQty) {
+            const teamContainer = document.getElementById('sim-vis-team');
+            const itemContainer = document.getElementById('sim-vis-items');
+            if (!teamContainer || !itemContainer) return;
+
+            teamContainer.innerHTML = '';
+            itemContainer.innerHTML = '';
+
+            const renderMp = Math.min(mpCount, 30);
+            const renderQty = Math.min(finalQty, 30);
+
+            for (let i = 0; i < renderMp; i++) {
+                const person = document.createElement('div');
+                person.className = "flex flex-col items-center justify-center p-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[9px] font-bold border border-indigo-100 min-w-[36px]";
+                person.innerHTML = `<i class="fa-solid fa-user text-xs"></i><span>P${i+1}</span>`;
+                teamContainer.appendChild(person);
+            }
+            if (mpCount > 30) {
+                const more = document.createElement('div');
+                more.className = "flex items-center justify-center px-2 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold";
+                more.textContent = `+${mpCount - 30}`;
+                teamContainer.appendChild(more);
+            }
+
+            for (let i = 0; i < renderQty; i++) {
+                const item = document.createElement('div');
+                item.className = "flex flex-col items-center justify-center p-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-bold border border-emerald-100 min-w-[36px]";
+                item.innerHTML = `<i class="fa-solid fa-box text-xs"></i><span>U${i+1}</span>`;
+                itemContainer.appendChild(item);
+            }
+            if (finalQty > 30) {
+                const more = document.createElement('div');
+                more.className = "flex items-center justify-center px-2 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold";
+                more.textContent = `+${finalQty - 30}`;
+                itemContainer.appendChild(more);
+            }
+        }
+
+        // ==========================================
+        //  PRESENTATION WINDOW & SUGGESTIONS
+        // ==========================================
+        async function updateDashboard() {
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            document.getElementById('dash-project-name').textContent = activeProject ? activeProject.name : 'Belum Ada';
+            
+            const dashInput = document.getElementById('dash-manpower-input');
+            if (dashInput && activeProject) {
+                dashInput.value = activeProject.manpower_count;
+            }
+
+            const totalItems = localBudgetData ? localBudgetData.length : 0;
+            const totalBudget = localBudgetData ? localBudgetData.reduce((acc, curr) => acc + (curr.jumlah * curr.harga_satuan), 0) : 0;
+
+            document.getElementById('dash-total-items').textContent = `${totalItems} Item`;
+            document.getElementById('dash-total-budget').textContent = formatRupiah(totalBudget);
+
+            renderDashboardChart();
+            generateAISuggestions(totalBudget);
+        }
+
+        function renderDashboardChart() {
+            const categoriesCost = {};
+            const categoriesQty = {};
+            
+            localBudgetData.forEach(item => {
+                const cost = (item.jumlah || 0) * (item.harga_satuan || 0);
+                const qty = item.jumlah || 0;
+                categoriesCost[item.kategori] = (categoriesCost[item.kategori] || 0) + cost;
+                categoriesQty[item.kategori] = (categoriesQty[item.kategori] || 0) + qty;
+            });
+
+            const labels = Object.keys(categoriesCost);
+            const costValues = labels.map(lbl => categoriesCost[lbl]);
+            const qtyValues = labels.map(lbl => categoriesQty[lbl]);
+
+            if (dashboardChartInstance) {
+                dashboardChartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('dashboard-chart');
+            if (!ctx) return;
+
+            dashboardChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Estimasi Anggaran (Rp)',
+                            data: costValues,
+                            backgroundColor: 'rgba(99, 102, 241, 0.85)', 
+                            borderColor: '#6366f1',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Total Kuantitas (Qty)',
+                            data: qtyValues,
+                            backgroundColor: 'rgba(245, 158, 11, 0.85)', 
+                            borderColor: '#f59e0b',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 10, weight: 'bold' },
+                                color: '#334155'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 0) {
+                                        label += formatRupiah(context.parsed.y);
+                                    } else {
+                                        label += context.parsed.y + ' Unit';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatRupiah(value);
+                                },
+                                font: { size: 9 }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false }, 
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' Unit';
+                                },
+                                font: { size: 9 }
+                            }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateAISuggestions(totalBudget) {
+            const container = document.getElementById('ai-suggestions-content');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const suggestions = [];
+
+            if (totalBudget === 0) {
+                container.innerHTML = `<p class="text-slate-400 italic">Data anggaran kosong.</p>`;
+                return;
+            }
+
+            const assetTotal = localBudgetData.filter(item => item.is_asset).reduce((sum, item) => sum + (item.jumlah * item.harga_satuan), 0);
+            const opexTotal = totalBudget - assetTotal;
+            const capexRatio = (assetTotal / totalBudget) * 100;
+
+            if (capexRatio > 70) {
+                suggestions.push(`
+                    <div class="p-3 bg-red-950/40 rounded-xl border border-red-900/40">
+                        <span class="font-bold text-red-400 block mb-1">⚠️ Likuiditas Risiko Tinggi (CapEx &gt; 70%)</span>
+                        Rasio aset modal mencapai ${capexRatio.toFixed(1)}%. Pertimbangkan metode leasing peralatan untuk menjaga stabilitas arus kas.
+                    </div>
+                `);
+            } else {
+                suggestions.push(`
+                    <div class="p-3 bg-indigo-950/40 rounded-xl border border-indigo-900/40">
+                        <span class="font-bold text-indigo-400 block mb-1">✅ Struktur CapEx Terkendali</span>
+                        Porsi alokasi aset modal terhitung sehat di tingkat ${capexRatio.toFixed(1)}%, menandakan porsi kas operasional habis pakai (OpEx) berada dalam batas wajar.
+                    </div>
+                `);
+            }
+
+            const apdItems = localBudgetData.filter(item => item.kategori === 'APD');
+            if (activeProject && activeProject.manpower_enabled) {
+                if (apdItems.length === 0) {
+                    suggestions.push(`
+                        <div class="p-3 bg-amber-950/40 rounded-xl border border-amber-900/40">
+                            <span class="font-bold text-amber-400 block mb-1">🚨 Kritis APD / Safety Karyawan</span>
+                            Workspace diatur memiliki ${activeProject.manpower_count} manpower, namun tidak ditemukan item belanja keselamatan berkategori APD. Segera daftarkan helm atau rompi safety.
+                        </div>
+                    `);
+                } else {
+                    suggestions.push(`
+                        <div class="p-3 bg-emerald-950/40 rounded-xl border border-emerald-100/40">
+                            <span class="font-bold text-emerald-400 block mb-1">🛡️ Perlindungan APD Terintegrasi</span>
+                            Item pengadaan APD terdeteksi di dalam anggaran dan terintegrasi dengan rasio manpower opening proyek.
+                        </div>
+                    `);
+                }
+            }
+
+            const vendorGroups = {};
+            localBudgetData.forEach(item => {
+                const name = item.nama_vendor || 'Tidak Diketahui';
+                vendorGroups[name] = (vendorGroups[name] || 0) + (item.jumlah * item.harga_satuan);
+            });
+
+            let topVendor = '';
+            let maxVendorCost = 0;
+            for (let v in vendorGroups) {
+                if (vendorGroups[v] > maxVendorCost) {
+                    maxVendorCost = vendorGroups[v];
+                    topVendor = v;
+                }
+            }
+
+            const topVendorRatio = (maxVendorCost / totalBudget) * 100;
+            if (topVendorRatio > 50 && topVendor !== 'Tidak Diketahui') {
+                suggestions.push(`
+                    <div class="p-3 bg-amber-950/40 rounded-xl border border-amber-900/40">
+                        <span class="font-bold text-amber-400 block mb-1">⚠️ Dominasi Vendor (${topVendor})</span>
+                        Lebih dari ${topVendorRatio.toFixed(1)}% anggaran terpusat pada satu rekanan penyedia jasa. Disarankan melakukan penawaran pembanding demi memitigasi risiko.
+                    </div>
+                `);
+            }
+
+            suggestions.forEach(html => container.insertAdjacentHTML('beforeend', html));
+        }
+    </script>
+</body>
+</html>
