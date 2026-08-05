@@ -289,7 +289,7 @@
                 <!-- KPI 3 -->
                 <div onclick="openKpiDetail('items')" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-200 transition">
                     <div>
-                        <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Macam Barang</p>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Jumlah ITEM Barang</p>
                         <h4 id="dash-total-items" class="text-xl font-black text-slate-800 mt-1">0 Item</h4>
                     </div>
                     <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-box-open text-xl"></i></div>
@@ -3504,7 +3504,7 @@ tbody.appendChild(tr);
             const totalBudget = localBudgetData ? localBudgetData.reduce((acc, curr) => acc + (curr.jumlah * curr.harga_satuan), 0) : 0;
             const totalQty = localBudgetData ? localBudgetData.reduce((acc, curr) => acc + (curr.jumlah || 0), 0) : 0;
 
-            document.getElementById('dash-total-items').textContent = `${totalItems} Macam`;
+            document.getElementById('dash-total-items').textContent = `${totalItems} ITEM`;
             document.getElementById('dash-total-budget').textContent = formatRupiah(totalBudget);
             document.getElementById('dash-total-qty').textContent = `${totalQty} Pcs`;
 
