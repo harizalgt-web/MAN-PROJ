@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -22,7 +23,7 @@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Scoped CSS Khusus untuk menu Data Operasional Bulanan agar tidak berbenturan dengan dashboard utama -->
+    <!-- Scoped CSS Khusus untuk menu Data Operasional Bulanan -->
     <style>
         .operasional-view {
             max-width: 1000px;
@@ -249,6 +250,9 @@
             <button onclick="switchTab('budgeting')" id="tab-btn-budgeting" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
                 <i class="fa-solid fa-list-check mr-2"></i> Rencana Anggaran
             </button>
+            <button onclick="switchTab('realisasi')" id="tab-btn-realisasi" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+                <i class="fa-solid fa-square-poll-horizontal mr-2"></i> Realisasi Anggaran
+            </button>
             <button onclick="switchTab('pricelist')" id="tab-btn-pricelist" class="flex-1 min-w-[120px] py-3 text-sm font-semibold text-center rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50">
                 <i class="fa-solid fa-tags mr-2"></i> Master Pricelist
             </button>
@@ -265,33 +269,44 @@
 
         <!-- ==================== MENU 1: DASHBOARD ANALISA & AI ==================== -->
         <div id="screen-dashboard" class="space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- KPI 1 -->
+                <div onclick="openKpiDetail('project')" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-200 transition">
                     <div>
                         <p class="text-xs text-slate-400 font-bold uppercase">Proyek Aktif</p>
                         <h4 id="dash-project-name" class="text-lg font-black text-slate-800 mt-1">-</h4>
                     </div>
                     <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-folder text-xl"></i></div>
                 </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <!-- KPI 2 -->
+                <div onclick="openKpiDetail('budget')" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-200 transition">
                     <div>
                         <p class="text-xs text-slate-400 font-bold uppercase">Total Estimasi Anggaran</p>
                         <h4 id="dash-total-budget" class="text-xl font-black text-slate-800 mt-1">Rp 0</h4>
                     </div>
                     <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-wallet text-xl"></i></div>
                 </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <!-- KPI 3 -->
+                <div onclick="openKpiDetail('items')" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-200 transition">
                     <div>
-                        <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Item</p>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Jumlah Macam Barang</p>
                         <h4 id="dash-total-items" class="text-xl font-black text-slate-800 mt-1">0 Item</h4>
                     </div>
                     <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-box-open text-xl"></i></div>
                 </div>
-                <!-- Kartu Kuantitas Manpower Interaktif -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <!-- KPI 4 (Tambahan Detail Akumulasi Fisik Pcs) -->
+                <div onclick="openKpiDetail('qty')" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-amber-200 transition">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Total Kuantitas (Pcs)</p>
+                        <h4 id="dash-total-qty" class="text-xl font-black text-slate-800 mt-1">0 Pcs</h4>
+                    </div>
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
+                </div>
+                <!-- KPI 5 -->
+                <div onclick="openKpiDetail('manpower')" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-amber-200 transition">
                     <div>
                         <p class="text-xs text-slate-400 font-bold uppercase mb-1">Kapasitas Manpower</p>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
                             <input type="number" id="dash-manpower-input" min="1" value="1" onchange="updateProjectManpowerCount(this.value)" class="w-16 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm font-black text-slate-800 text-center focus:ring-1 focus:ring-indigo-500 focus:outline-none">
                             <span class="text-xs font-bold text-slate-500">Orang</span>
                         </div>
@@ -300,16 +315,26 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Chart Panel -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm col-span-1 lg:col-span-2">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Chart Panel 1 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm col-span-1 lg:col-span-5">
                     <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider">Distribusi Anggaran Proyek</h3>
                     <div class="h-72 relative">
                         <canvas id="dashboard-chart"></canvas>
                     </div>
                 </div>
+                <!-- Chart Panel 2: Realisasi Anggaran (Tambahan KPI Realisasi & visualisasi) -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm col-span-1 lg:col-span-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Progress Pemenuhan Realisasi</h3>
+                        <span id="realization-percent-badge" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">0% Terpenuhi</span>
+                    </div>
+                    <div class="h-72 relative">
+                        <canvas id="realization-chart"></canvas>
+                    </div>
+                </div>
                 <!-- AI Advisory Engine -->
-                <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between">
+                <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between col-span-1 lg:col-span-3">
                     <div>
                         <div class="flex items-center gap-2 mb-4">
                             <div class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></div>
@@ -327,292 +352,227 @@
             </div>
         </div>
 
-        <!-- ==================== MENU 2: RENCANA ANGGARAN ==================== -->
-        <div id="screen-budgeting" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Form Card & Manpower Settings -->
-            <div class="lg:col-span-1 flex flex-col gap-4">
+        <!-- ==================== MENU 2: RENCANA ANGGARAN (FULL VIEW TABLE) ==================== -->
+        <div id="screen-budgeting" class="hidden flex flex-col gap-4">
+            <!-- Parameter Control Manpower Terintegrasi -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Manpower Control -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Otomatisasi Manpower</h3>
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between md:col-span-1">
+                    <div class="flex items-center gap-3">
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="project-manpower-enabled" onchange="toggleProjectManpower()" class="sr-only peer">
                             <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Otomatisasi Manpower</h3>
+                            <p class="text-[10px] text-slate-400 font-sans">Kuantitas dihitung instan berskala rasio headcount.</p>
+                        </div>
                     </div>
-                    <!-- Dipastikan Selalu Terlihat agar Sinkronisasi Lebih Terbaca -->
-                    <div id="manpower-settings" class="space-y-2">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase">Jumlah Manpower Terencana</label>
-                        <input type="number" id="project-manpower-count" min="1" value="1" onchange="updateProjectManpowerCount(this.value)" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold bg-amber-50 text-slate-800">
-                        <p class="text-[10px] text-slate-400">Qty barang dengan rasio khusus akan berlipat ganda sesuai kuantitas tim ini.</p>
+                    <div id="manpower-settings" class="flex items-center gap-1">
+                        <input type="number" id="project-manpower-count" min="1" value="1" onchange="updateProjectManpowerCount(this.value)" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold text-center bg-amber-50">
+                        <span class="text-[10px] font-bold text-slate-400">Ppl</span>
                     </div>
                 </div>
 
-                <!-- Form Add Item -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2 uppercase tracking-wider">
-                        <i class="fa-solid fa-plus-circle text-indigo-600"></i> Tambah Anggaran
-                    </h2>
-                    <form id="budget-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Barang (Autocomplete)</label>
-                            <input type="text" id="input-nama" required list="pricelist-options" oninput="handleNamaInput(this.value)" placeholder="Ketik nama atau pilih master..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <input type="hidden" id="input-manpower-ratio-hidden" value="0">
-                            <datalist id="pricelist-options"></datalist>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
-                            <select id="input-kategori" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <option value="">-- Pilih Kategori --</option>
-                                <option value="Peralatan">Peralatan</option>
-                                <option value="Perlengkapan">Perlengkapan</option>
-                                <option value="Operasional">Operasional</option>
-                                <option value="Pemasaran">Pemasaran</option>
-                                <option value="Sewa & Renovasi">Sewa & Renovasi</option>
-                                <option value="Handstool">Handstool</option>
-                                <option value="Special Tools">Special Tools</option>
-                                <option value="APD">APD</option>
-                                <option value="Lainnya">Lainnya</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Vendor / Penyedia</label>
-                            <input type="text" id="input-vendor" placeholder="Contoh: CV. Berkat Sejahtera" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                        <!-- Form input Aset pada Transaksi Anggaran -->
-                        <div class="flex items-center gap-2 py-1">
-                            <input type="checkbox" id="input-is-asset" onchange="toggleInputAssetInput()" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
-                            <label for="input-is-asset" class="text-xs font-semibold text-slate-700">Item ini merupakan Aset</label>
-                        </div>
-                        <div id="input-dep-container" class="hidden">
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Masa Depresiasi (Tahun)</label>
-                            <input type="number" id="input-dep-tahun" min="1" max="50" value="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Qty / Plan</label>
-                                <input type="number" id="input-qty" min="1" required value="1" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Harga Satuan (Rp)</label>
-                                <input type="number" id="input-harga" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Deskripsi</label>
-                            <textarea id="input-deskripsi" rows="2" placeholder="Spesifikasi detail..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                        </div>
-                        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition shadow-sm">
-                            <i class="fa-solid fa-floppy-disk mr-2"></i> Tambah Item
-                        </button>
-                    </form>
+                <!-- Informasi Pembantu -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between md:col-span-2">
+                    <div class="text-xs text-slate-500 leading-relaxed">
+                        <span class="font-bold text-indigo-600 block uppercase mb-0.5"><i class="fa-solid fa-circle-info"></i> Panduan Pengadaan Anggaran</span>
+                        Tambahkan logistik pengadaan proyek Anda menggunakan tombol pemicu baru di bawah. Pengaturan ini akan memperbarui estimasi nilai CapEx & OpEx proyek secara real-time.
+                    </div>
                 </div>
             </div>
 
             <!-- Table Card Container -->
-            <div class="lg:col-span-3 flex flex-col gap-4">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
-                    <!-- Filter Rencana Anggaran Integrasi Baru -->
-                    <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
-                        <h3 class="font-bold text-slate-900">Rincian Rencana Anggaran (Tabel: budgeting_project)</h3>
-                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <!-- Input Filter Rencana Anggaran -->
-                            <input type="text" id="budget-filter-input" oninput="filterBudgetTable()" placeholder="Cari nama, kategori, vendor..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 sm:w-60">
-                            <button id="btn-toggle-bulk-mode" onclick="toggleBulkEditMode()" class="px-3.5 py-2 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white shadow-sm font-sans">
-                                <i class="fa-solid fa-list-check"></i> Edit Qty Massal
-                            </button>
-                        </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <!-- Filter Rencana Anggaran Integrasi Baru -->
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+                    <h3 class="font-bold text-slate-900">Rincian Rencana Anggaran (Tabel: budgeting_project)</h3>
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <!-- Tombol Tambah Item Muncul Pop-Up -->
+                        <button onclick="openBudgetFormModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus-circle"></i> Tambah Item Anggaran
+                        </button>
+                        <!-- Input Filter Rencana Anggaran -->
+                        <input type="text" id="budget-filter-input" oninput="filterBudgetTable()" placeholder="Cari nama, kategori, vendor..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 sm:w-60">
+                        <button id="btn-toggle-bulk-mode" onclick="toggleBulkEditMode()" class="px-3.5 py-2 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white shadow-sm font-sans">
+                            <i class="fa-solid fa-list-check"></i> Edit Qty Massal
+                        </button>
                     </div>
+                </div>
 
-                    <!-- Panel Kuantitas Massal -->
-                    <div id="bulk-edit-bar" class="hidden bg-indigo-50 border-y border-indigo-100 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAllBudget(this.checked)" class="w-4 h-4 rounded text-indigo-600 border-slate-300">
-                            <span class="text-xs font-bold text-slate-700">Pilih Semua Item Terpilih</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs font-semibold text-slate-600">Set Kuantitas Baru:</label>
-                            <input type="number" id="bulk-qty-input" min="1" value="5" class="w-20 px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-center font-bold">
-                            <button onclick="applyBulkQtyUpdate()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition">
-                                Update Terpilih
-                            </button>
-                            <button onclick="toggleBulkEditMode()" class="px-3 py-1.5 bg-slate-200 text-slate-600 hover:bg-slate-300 rounded-lg text-xs font-semibold transition">
-                                Batal
-                            </button>
-                        </div>
+                <!-- Panel Kuantitas Massal -->
+                <div id="bulk-edit-bar" class="hidden bg-indigo-50 border-y border-indigo-100 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAllBudget(this.checked)" class="w-4 h-4 rounded text-indigo-600 border-slate-300">
+                        <span class="text-xs font-bold text-slate-700">Pilih Semua Item Terpilih</span>
                     </div>
-                    
-                    <!-- Seluruh Kolom Dipecah Terpisah Sesuai Atribut Database -->
-                    <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left border-collapse min-w-[1000px]">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                                    <th id="th-bulk-checkbox" class="p-4 w-[3%] hidden"></th>
-                                    <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('kategori')">
-                                        Kategori <i id="sort-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[15%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('nama_barang')">
-                                        Nama Barang <i id="sort-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('nama_vendor')">
-                                        Vendor <i id="sort-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[5%] text-center cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('jumlah')">
-                                        Qty <i id="sort-icon-jumlah" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[9%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('harga_satuan')">
-                                        Satuan (Rp) <i id="sort-icon-harga_satuan" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[10%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('total_harga')">
-                                        Total (Rp) <i id="sort-icon-total_harga" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[8%]">Tipe</th>
-                                    <th class="p-4 w-[8%] text-center">Depresiasi</th>
-                                    <th class="p-4 w-[8%] text-center">Rasio MP</th>
-                                    <th class="p-4 w-[12%]">Deskripsi</th>
-                                    <th class="p-4 w-[5%] text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="budget-tbody" class="divide-y divide-slate-100 text-sm">
-                                <tr>
-                                    <td colspan="12" class="p-8 text-center text-slate-400">Memuat rincian tabel...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-slate-600">Set Kuantitas Baru:</label>
+                        <input type="number" id="bulk-qty-input" min="1" value="5" class="w-20 px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-center font-bold">
+                        <button onclick="applyBulkQtyUpdate()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition">
+                            Update Terpilih
+                        </button>
+                        <button onclick="toggleBulkEditMode()" class="px-3 py-1.5 bg-slate-200 text-slate-600 hover:bg-slate-300 rounded-lg text-xs font-semibold transition">
+                            Batal
+                        </button>
                     </div>
+                </div>
+                
+                <!-- Seluruh Kolom Dipecah Terpisah Sesuai Atribut Database -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[1100px]">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                <th id="th-bulk-checkbox" class="p-4 w-[3%] hidden"></th>
+                                <!-- Kolom No (Nomor) -->
+                                <th class="p-4 w-[4%] text-center">No</th>
+                                <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('kategori')">
+                                    Kategori <i id="sort-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[15%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('nama_barang')">
+                                    Nama Barang <i id="sort-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('nama_vendor')">
+                                    Vendor <i id="sort-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[5%] text-center cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('jumlah')">
+                                    Qty <i id="sort-icon-jumlah" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[9%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('harga_satuan')">
+                                    Satuan (Rp) <i id="sort-icon-harga_satuan" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[10%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortBudgetTable('total_harga')">
+                                    Total (Rp) <i id="sort-icon-total_harga" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[8%]">Tipe</th>
+                                <th class="p-4 w-[8%] text-center">Depresiasi</th>
+                                <th class="p-4 w-[8%] text-center">Rasio MP</th>
+                                <th class="p-4 w-[12%]">Deskripsi</th>
+                                <th class="p-4 w-[5%] text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="budget-tbody" class="divide-y divide-slate-100 text-sm">
+                            <tr>
+                                <td colspan="13" class="p-8 text-center text-slate-400">Memuat rincian tabel...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== MENU 3: MASTER PRICELIST ==================== -->
-        <div id="screen-pricelist" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Form Card Master Pricelist -->
-            <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
-                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-tag text-emerald-600"></i> Registrasi Master Item
-                </h2>
-                <form id="pricelist-form" onsubmit="handlePricelistSubmit(event)" class="space-y-4">
+        <!-- ==================== MENU 3: REALISASI ANGGARAN (NEW MENU) ==================== -->
+        <div id="screen-realisasi" class="hidden flex flex-col gap-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
-                        <select id="pl-kategori" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="">-- Pilih Kategori --</option>
-                            <option value="Peralatan">Peralatan</option>
-                            <option value="Perlengkapan">Perlengkapan</option>
-                            <option value="Operasional">Operasional</option>
-                            <option value="Pemasaran">Pemasaran</option>
-                            <option value="Sewa & Renovasi">Sewa & Renovasi</option>
-                            <option value="Handstool">Handstool</option>
-                            <option value="Special Tools">Special Tools</option>
-                            <option value="APD">APD</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
+                        <h3 class="font-bold text-slate-900">Pemenuhan Realisasi Anggaran</h3>
+                        <p class="text-xs text-slate-400">Kelola status pembelian logistik, pengiriman barang, dan catat deskripsi pelacakan PO/Resi</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Barang</label>
-                        <input type="text" id="pl-nama" required placeholder="Contoh: AC Split 1 PK" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <!-- Input Filter Realisasi -->
+                        <input type="text" id="realisasi-filter-input" oninput="filterRealisasiTable()" placeholder="Cari nama, vendor, status..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 sm:w-60">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Vendor Utama</label>
-                        <input type="text" id="pl-vendor" placeholder="Contoh: PT. Electronic Solusindo" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    
-                    <!-- Checkbox Aset & Masa Depresiasi di Master Form -->
-                    <div class="flex items-center gap-2 py-1">
-                        <input type="checkbox" id="pl-is-asset" onchange="togglePlAssetInput()" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500">
-                        <label for="pl-is-asset" class="text-xs font-semibold text-slate-700">Item ini merupakan Aset</label>
-                    </div>
-                    <div id="pl-dep-container" class="hidden">
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Masa Depresiasi (Tahun)</label>
-                        <input type="number" id="pl-dep-tahun" min="1" max="50" value="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans">
-                    </div>
-
-                    <!-- Input Rasio Manpower -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rasio Kebutuhan Manpower</label>
-                        <input type="number" id="pl-manpower-ratio" step="0.1" min="0" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold">
-                        <p class="text-[10px] text-slate-400 mt-1">Isi rasio kebutuhan per orang (Contoh: 1, 0.5, atau 2). Biarkan 0 jika tidak ada hubungan rasio.</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Harga Estimasi Standard (Rp)</label>
-                        <input type="number" id="pl-harga" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Deskripsi Tambahan</label>
-                        <textarea id="pl-deskripsi" rows="2" placeholder="Spesifikasi standar..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
-                    </div>
-                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition shadow-sm font-sans">
-                        <i class="fa-solid fa-bookmark mr-2"></i> Simpan ke Pricelist
-                    </button>
-                </form>
-            </div>
-
-            <!-- Table Card Master Pricelist & Importer -->
-            <div class="lg:col-span-3 flex flex-col">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
-                    <!-- Filter Master Pricelist Integrasi Baru -->
-                    <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50">
-                        <div>
-                            <h3 class="font-bold text-slate-900">Master Data Katalog Harga (Tabel: project_pricelist)</h3>
-                            <p class="text-xs text-slate-400">Gunakan berkas Excel sebagai referensi ataupun alat import masal</p>
-                        </div>
-                        
-                        <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
-                            <!-- Input Filter Master Pricelist -->
-                            <input type="text" id="pricelist-filter-input" oninput="filterPricelistTable()" placeholder="Cari nama, kategori, vendor..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 w-44 sm:w-60">
-                            <!-- Tombol Pakai Terpilih (Kolektif) -->
-                            <button onclick="applyBulkPricelistUse()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm font-sans">
-                                <i class="fa-solid fa-cart-plus"></i> Pakai Terpilih
-                            </button>
-                            <button onclick="exportPricelistTemplate()" class="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm bg-white font-sans">
-                                <i class="fa-solid fa-cloud-arrow-down text-slate-500"></i> Format Excel
-                            </button>
-                            <label class="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:bg-emerald-100 font-sans">
-                                <i class="fa-solid fa-file-import text-emerald-600"></i> Import Excel
-                                <input type="file" id="excel-import-input" accept=".xlsx" class="hidden" onchange="importPricelistExcel(event)">
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- Kolom Dipecah Terpisah Secara Rinci -->
-                    <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left border-collapse min-w-[900px]">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                                    <th class="p-4 w-[4%] text-center">
-                                        <input type="checkbox" id="pl-select-all" onchange="toggleSelectAllPricelist(this.checked)" class="w-4 h-4 rounded text-emerald-600 border-slate-300">
-                                    </th>
-                                    <th class="p-4 w-[12%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('kategori')">
-                                        Kategori <i id="sort-pl-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[18%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('nama_barang')">
-                                        Nama Barang <i id="sort-pl-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('nama_vendor')">
-                                        Vendor <i id="sort-pl-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[12%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('harga_estimasi')">
-                                        Harga Estimasi <i id="sort-pl-icon-harga_estimasi" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
-                                    </th>
-                                    <th class="p-4 w-[9%]">Tipe</th>
-                                    <th class="p-4 w-[9%] text-center">Depresiasi</th>
-                                    <th class="p-4 w-[9%] text-center">Rasio MP</th>
-                                    <th class="p-4 w-[11%]">Deskripsi</th>
-                                    <th class="p-4 w-[5%] text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pricelist-tbody" class="divide-y divide-slate-100 text-sm">
-                                <tr>
-                                    <td colspan="10" class="p-8 text-center text-slate-400">Memuat data catalog pricelist...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[1200px]">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                <th class="p-4 w-[4%] text-center">No</th>
+                                <th class="p-4 w-[11%]">Kategori</th>
+                                <th class="p-4 w-[18%]">Nama Barang</th>
+                                <th class="p-4 w-[10%]">Vendor</th>
+                                <th class="p-4 w-[5%] text-center">Qty</th>
+                                <th class="p-4 w-[8%] text-right">Satuan (Rp)</th>
+                                <th class="p-4 w-[10%] text-right">Total (Rp)</th>
+                                <th class="p-4 w-[12%] text-center">Status Realisasi</th>
+                                <th class="p-4 w-[16%]">No PO / Resi / Keterangan</th>
+                                <th class="p-4 w-[16%] text-center">Ubah Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="realisasi-tbody" class="divide-y divide-slate-100 text-sm">
+                            <tr>
+                                <td colspan="10" class="p-8 text-center text-slate-400">Memuat rincian realisasi...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== MENU 4: DATA OPERASIONAL BULANAN ==================== -->
+        <!-- ==================== MENU 4: MASTER PRICELIST (FULL VIEW TABLE) ==================== -->
+        <div id="screen-pricelist" class="hidden flex flex-col gap-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <!-- Filter Master Pricelist Integrasi Baru -->
+                <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50">
+                    <div>
+                        <h3 class="font-bold text-slate-900">Master Data Katalog Harga (Tabel: project_pricelist)</h3>
+                        <p class="text-xs text-slate-400">Gunakan berkas Excel sebagai referensi ataupun alat import masal</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                        <!-- Tombol Tambah Master Muncul Pop-up -->
+                        <button onclick="openPricelistFormModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus-circle"></i> Tambah Katalog Master
+                        </button>
+                        <!-- Input Filter Master Pricelist -->
+                        <input type="text" id="pricelist-filter-input" oninput="filterPricelistTable()" placeholder="Cari nama, kategori, vendor..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 w-44 sm:w-60">
+                        <!-- Tombol Pakai Terpilih (Kolektif) -->
+                        <button onclick="applyBulkPricelistUse()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm font-sans">
+                            <i class="fa-solid fa-cart-plus"></i> Pakai Terpilih
+                        </button>
+                        <button onclick="exportPricelistTemplate()" class="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm bg-white font-sans">
+                            <i class="fa-solid fa-cloud-arrow-down text-slate-500"></i> Format Excel
+                        </button>
+                        <label class="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:bg-emerald-100 font-sans">
+                            <i class="fa-solid fa-file-import text-emerald-600"></i> Import Excel
+                            <input type="file" id="excel-import-input" accept=".xlsx" class="hidden" onchange="importPricelistExcel(event)">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Kolom Dipecah Terpisah Secara Rinci -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[1000px]">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                                <th class="p-4 w-[4%] text-center">
+                                    <input type="checkbox" id="pl-select-all" onchange="toggleSelectAllPricelist(this.checked)" class="w-4 h-4 rounded text-emerald-600 border-slate-300">
+                                </th>
+                                <!-- Kolom No (Nomor) -->
+                                <th class="p-4 w-[4%] text-center">No</th>
+                                <th class="p-4 w-[12%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('kategori')">
+                                    Kategori <i id="sort-pl-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[18%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('nama_barang')">
+                                    Nama Barang <i id="sort-pl-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('nama_vendor')">
+                                    Vendor <i id="sort-pl-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[12%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortPricelistTable('harga_estimasi')">
+                                    Harga Estimasi <i id="sort-pl-icon-harga_estimasi" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[9%]">Tipe</th>
+                                <th class="p-4 w-[9%] text-center">Depresiasi</th>
+                                <th class="p-4 w-[9%] text-center">Rasio MP</th>
+                                <th class="p-4 w-[11%]">Deskripsi</th>
+                                <th class="p-4 w-[5%] text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pricelist-tbody" class="divide-y divide-slate-100 text-sm">
+                            <tr>
+                                <td colspan="11" class="p-8 text-center text-slate-400">Memuat data catalog pricelist...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MENU 5: DATA OPERASIONAL BULANAN ==================== -->
         <div id="screen-operasional" class="hidden operasional-view">
             <!-- Header -->
             <div class="header-op">
@@ -896,7 +856,7 @@
             </table>
         </div>
 
-        <!-- ==================== MENU 5: KELOLA PROYEK (CRUD) ==================== -->
+        <!-- ==================== MENU 6: KELOLA PROYEK (CRUD & DUPLICATE) ==================== -->
         <div id="screen-projects" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Form Create/Edit Project -->
             <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
@@ -947,7 +907,7 @@
             </div>
         </div>
 
-        <!-- ==================== MENU 6: RUMUS & KALKULATOR RASIO ==================== -->
+        <!-- ==================== MENU 7: RUMUS & KALKULATOR RASIO ==================== -->
         <div id="screen-ratio-calc" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Penjelasan Teknis Rumus -->
             <div class="lg:col-span-2 space-y-6">
@@ -1151,6 +1111,165 @@
         </div>
     </div>
 
+    <!-- ==================== POPUP MODAL DYNAMIC KPI DETAILS (NEW FEATURE) ==================== -->
+    <div id="kpi-detail-modal" class="fixed inset-0 bg-slate-900/80 z-[95] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden text-slate-800">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 id="kpi-detail-title" class="font-bold text-lg text-slate-900 flex items-center gap-2">Detail KPI</h3>
+                <button onclick="closeKpiDetail()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div id="kpi-detail-content" class="p-6 overflow-y-auto space-y-4 text-sm text-slate-600 flex-1">
+                <!-- Diisi secara dinamis melalui JavaScript -->
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 text-right">
+                <button onclick="closeKpiDetail()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-semibold text-slate-700 transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== POPUP MODAL FORM TAMBAH BUDGET (NEW VIEW MODAL) ==================== -->
+    <div id="budget-form-modal" class="fixed inset-0 bg-slate-900/80 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full text-slate-800 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeBudgetFormModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                <i class="fa-solid fa-plus-circle text-indigo-600"></i> Tambah Anggaran
+            </h2>
+            <form id="budget-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Barang (Autocomplete)</label>
+                    <input type="text" id="input-nama" required list="pricelist-options" oninput="handleNamaInput(this.value)" placeholder="Ketik nama atau pilih master..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="hidden" id="input-manpower-ratio-hidden" value="0">
+                    <datalist id="pricelist-options"></datalist>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
+                    <select id="input-kategori" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="Peralatan">Peralatan</option>
+                        <option value="Perlengkapan">Perlengkapan</option>
+                        <option value="Operasional">Operasional</option>
+                        <option value="Pemasaran">Pemasaran</option>
+                        <option value="Sewa & Renovasi">Sewa & Renovasi</option>
+                        <option value="Handstool">Handstool</option>
+                        <option value="Special Tools">Special Tools</option>
+                        <option value="APD">APD</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Vendor / Penyedia</label>
+                    <input type="text" id="input-vendor" placeholder="Contoh: CV. Berkat Sejahtera" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <!-- Form input Aset pada Transaksi Anggaran -->
+                <div class="flex items-center gap-2 py-1">
+                    <input type="checkbox" id="input-is-asset" onchange="toggleInputAssetInput()" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                    <label for="input-is-asset" class="text-xs font-semibold text-slate-700">Item ini merupakan Aset</label>
+                </div>
+                <div id="input-dep-container" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Masa Depresiasi (Tahun)</label>
+                    <input type="number" id="input-dep-tahun" min="1" max="50" value="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Qty / Plan</label>
+                        <input type="number" id="input-qty" min="1" required value="1" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Harga Satuan (Rp)</label>
+                        <input type="number" id="input-harga" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Deskripsi</label>
+                    <textarea id="input-deskripsi" rows="2" placeholder="Spesifikasi detail..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition shadow-sm">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i> Tambah Item
+                    </button>
+                    <button type="button" onclick="closeBudgetFormModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold transition">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== POPUP MODAL FORM TAMBAH MASTER PRICELIST (NEW VIEW MODAL) ==================== -->
+    <div id="pricelist-form-modal" class="fixed inset-0 bg-slate-900/80 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full text-slate-800 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closePricelistFormModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                <i class="fa-solid fa-tag text-emerald-600"></i> Registrasi Master Item
+            </h2>
+            <form id="pricelist-form" onsubmit="handlePricelistSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
+                    <select id="pl-kategori" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="Peralatan">Peralatan</option>
+                        <option value="Perlengkapan">Perlengkapan</option>
+                        <option value="Operasional">Operasional</option>
+                        <option value="Pemasaran">Pemasaran</option>
+                        <option value="Sewa & Renovasi">Sewa & Renovasi</option>
+                        <option value="Handstool">Handstool</option>
+                        <option value="Special Tools">Special Tools</option>
+                        <option value="APD">APD</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Barang</label>
+                    <input type="text" id="pl-nama" required placeholder="Contoh: AC Split 1 PK" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Vendor Utama</label>
+                    <input type="text" id="pl-vendor" placeholder="Contoh: PT. Electronic Solusindo" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                
+                <!-- Checkbox Aset & Masa Depresiasi di Master Form -->
+                <div class="flex items-center gap-2 py-1">
+                    <input type="checkbox" id="pl-is-asset" onchange="togglePlAssetInput()" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500">
+                    <label for="pl-is-asset" class="text-xs font-semibold text-slate-700">Item ini merupakan Aset</label>
+                </div>
+                <div id="pl-dep-container" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Masa Depresiasi (Tahun)</label>
+                    <input type="number" id="pl-dep-tahun" min="1" max="50" value="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans">
+                </div>
+
+                <!-- Input Rasio Manpower -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rasio Kebutuhan Manpower</label>
+                    <input type="number" id="pl-manpower-ratio" step="0.1" min="0" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold">
+                    <p class="text-[10px] text-slate-400 mt-1">Isi rasio kebutuhan per orang (Contoh: 1, 0.5, atau 2). Biarkan 0 jika tidak ada hubungan rasio.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Harga Estimasi Standard (Rp)</label>
+                    <input type="number" id="pl-harga" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Deskripsi Tambahan</label>
+                    <textarea id="pl-deskripsi" rows="2" placeholder="Spesifikasi standar..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition shadow-sm font-sans">
+                        <i class="fa-solid fa-bookmark mr-2"></i> Simpan ke Pricelist
+                    </button>
+                    <button type="button" onclick="closePricelistFormModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold transition">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- FOOTER DEVELOPMENT IDENTITY -->
     <footer class="mt-12 pb-6 text-center">
         <p class="text-xs font-bold text-blue-600">Develope By Harizal</p>
@@ -1171,10 +1290,12 @@
         let localBudgetData = []; 
         let localPricelistData = [];
         let localProjectsData = [];
+        let localRealisasiData = [];
         let activeProjectId = null;
         let currentSlide = 1;
         let chartInstance = null;
         let dashboardChartInstance = null;
+        let realizationChartInstance = null;
         let currentTab = 'dashboard';
         let bulkEditMode = false;
 
@@ -1425,6 +1546,8 @@
                 const item = { 
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     created_at: new Date().toISOString(),
+                    status: p.status || 'Progress MR-PO',
+                    realisasi_deskripsi: p.realisasi_deskripsi || '',
                     ...p 
                 };
                 data.push(item);
@@ -1509,6 +1632,8 @@
 `    harga_satuan NUMERIC DEFAULT 0,\n` +
 `    deskripsi TEXT DEFAULT '',\n` +
 `    manpower_ratio NUMERIC DEFAULT 0,\n` +
+`    status TEXT DEFAULT 'Progress MR-PO',\n` +
+`    realisasi_deskripsi TEXT DEFAULT '',\n` +
 `    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n` +
 `);\n\n` +
 `-- KEBIJAKAN AKSES PUBLIC BYPASS RLS (ANON ROLE)\n` +
@@ -1565,15 +1690,23 @@
             }
         }
 
-        function updateSummaryCards(data) {
-            const totalBudget = data.reduce((acc, curr) => acc + (curr.jumlah * curr.harga_satuan), 0);
-            const totalItems = data.length;
-            
-            const dashTotalBudget = document.getElementById('dash-total-budget');
-            const dashTotalItems = document.getElementById('dash-total-items');
-            
-            if (dashTotalBudget) dashTotalBudget.textContent = formatRupiah(totalBudget);
-            if (dashTotalItems) dashTotalItems.textContent = `${totalItems} Item`;
+        // ==========================================
+        //  MODAL VISIBILITY CONTROL (TAMBAHAN REQ 7)
+        // ==========================================
+        function openBudgetFormModal() {
+            document.getElementById('budget-form-modal').classList.remove('hidden');
+        }
+
+        function closeBudgetFormModal() {
+            document.getElementById('budget-form-modal').classList.add('hidden');
+        }
+
+        function openPricelistFormModal() {
+            document.getElementById('pricelist-form-modal').classList.remove('hidden');
+        }
+
+        function closePricelistFormModal() {
+            document.getElementById('pricelist-form-modal').classList.add('hidden');
         }
 
         // Autocomplete autofill ketika memilih Master Item
@@ -1601,7 +1734,7 @@
         }
 
         // ==========================================
-        //  CRUD PROYEK
+        //  CRUD PROYEK & DUPLICATE (REQ 4)
         // ==========================================
         async function fetchProjectsAndDefault() {
             try {
@@ -1630,7 +1763,6 @@
                 syncProjectManpowerFields();
                 await fetchData();
                 
-                // Sinkronisasi otomatis saat pertama kali dibuka jika otomatisasi manpower aktif
                 if (defaultProject && defaultProject.manpower_enabled) {
                     await syncManpowerQuantities();
                 }
@@ -1665,6 +1797,10 @@
                     <td class="p-4 text-center">${isDefaultBadge}</td>
                     <td class="p-4 text-slate-500">${new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     <td class="p-4 text-center flex justify-center gap-2">
+                        <!-- Tombol Duplicate Proyek -->
+                        <button onclick="duplicateProject('${p.id}', '${p.name}')" class="p-1.5 text-amber-500 hover:text-amber-700 transition" title="Duplikat Proyek">
+                            <i class="fa-regular fa-copy text-sm"></i>
+                        </button>
                         <button onclick="editProjectForm('${p.id}', '${p.name}')" class="p-1.5 text-indigo-500 hover:text-indigo-700 transition" title="Edit Nama">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </button>
@@ -1675,6 +1811,61 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        async function duplicateProject(id, name) {
+            if (!confirm(`Duplikat proyek "${name}" beserta seluruh rincian anggaran di dalamnya?`)) return;
+            try {
+                const originalProj = localProjectsData.find(p => p.id == id);
+                if (!originalProj) return;
+
+                const duplicateName = `Salinan ${originalProj.name}`;
+                const payloadProject = {
+                    name: duplicateName,
+                    is_default: false,
+                    manpower_enabled: originalProj.manpower_enabled,
+                    manpower_count: originalProj.manpower_count
+                };
+
+                const newProjects = await dbInsert('projects', payloadProject);
+                if (!newProjects || newProjects.length === 0) {
+                    throw new Error("Gagal mengklon entitas dasar proyek.");
+                }
+
+                const newProjectId = newProjects[0].id;
+
+                let originalItems = [];
+                if (!isUsingFallback && supabaseClient) {
+                    const { data, error } = await supabaseClient.from('budgeting_project').select('*').eq('project_id', id);
+                    if (error) throw error;
+                    originalItems = data || [];
+                } else {
+                    originalItems = getFallbackData('budgeting_project', { eq: ['project_id', id] });
+                }
+
+                if (originalItems.length > 0) {
+                    const clonedItems = originalItems.map(item => ({
+                        project_id: newProjectId,
+                        kategori: item.kategori,
+                        nama_barang: item.nama_barang,
+                        nama_vendor: item.nama_vendor,
+                        is_asset: item.is_asset,
+                        masa_depresiasi: item.masa_depresiasi,
+                        jumlah: item.jumlah,
+                        harga_satuan: item.harga_satuan,
+                        deskripsi: item.deskripsi,
+                        manpower_ratio: item.manpower_ratio,
+                        status: item.status || 'Progress MR-PO',
+                        realisasi_deskripsi: item.realisasi_deskripsi || ''
+                    }));
+                    await dbInsert('budgeting_project', clonedItems);
+                }
+
+                alert(`Proyek "${duplicateName}" berhasil diduplikasi.`);
+                await fetchProjectsAndDefault();
+            } catch (err) {
+                alert("Gagal menduplikasi proyek: " + err.message);
+            }
         }
 
         async function setProjectAsDefault(id) {
@@ -1737,7 +1928,7 @@
         }
 
         // ==========================================
-        //  PENGELOLAAN RASIO MANPOWER & SINKRONISASI CO-INPUT CO-EXISTING
+        //  PENGELOLAAN RASIO MANPOWER
         // ==========================================
         function syncProjectManpowerFields() {
             const activeProject = localProjectsData.find(p => p.id === activeProjectId);
@@ -1753,7 +1944,7 @@
             if (countInputDash) countInputDash.value = activeProject.manpower_count;
 
             if (container) {
-                container.classList.remove('hidden'); // Selalu tampilkan input agar sinkronisasi terbaca
+                container.classList.remove('hidden');
             }
         }
 
@@ -1841,11 +2032,11 @@
         }
 
         // ==========================================
-        //  TAB SYSTEM CONTROL
+        //  TAB SYSTEM CONTROL (MODIFIED)
         // ==========================================
         function switchTab(tab) {
             currentTab = tab;
-            const tabs = ['dashboard', 'budgeting', 'pricelist', 'operasional', 'projects', 'ratio-calc'];
+            const tabs = ['dashboard', 'budgeting', 'pricelist', 'operasional', 'projects', 'ratio-calc', 'realisasi'];
             
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-btn-${t}`);
@@ -1873,6 +2064,8 @@
                     activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-slate-900 text-white shadow";
                 } else if (tab === 'ratio-calc') {
                     activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-amber-600 text-white shadow";
+                } else if (tab === 'realisasi') {
+                    activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-purple-600 text-white shadow";
                 } else {
                     activeBtn.className = "flex-1 min-w-[120px] py-3 text-sm font-bold text-center rounded-lg transition-all bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm";
                 }
@@ -1889,6 +2082,8 @@
                 fetchPricelist();
             } else if (tab === 'ratio-calc') {
                 runRatioSimulation();
+            } else if (tab === 'realisasi') {
+                fetchRealisasiData();
             }
         }
 
@@ -1996,7 +2191,9 @@
                         jumlah: jumlah,
                         harga_satuan: match.harga_estimasi,
                         deskripsi: match.deskripsi || "",
-                        manpower_ratio: match.manpower_ratio || 0
+                        manpower_ratio: match.manpower_ratio || 0,
+                        status: 'Progress MR-PO',
+                        realisasi_deskripsi: ''
                     });
                 }
             });
@@ -2017,7 +2214,7 @@
         }
 
         // ==========================================
-        //  CRUD RENCANA ANGGARAN (PENGURAIAN DETIL SETIAP KOLOM)
+        //  CRUD RENCANA ANGGARAN (DETIL SETIAP KOLOM & NO)
         // ==========================================
         async function fetchData() {
             if (!activeProjectId) return;
@@ -2048,15 +2245,15 @@
             if (data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="12" class="p-8 text-center text-slate-400">
-                            Belum ada rincian anggaran. Tambahkan belanja baru melalui form kiri.
+                        <td colspan="13" class="p-8 text-center text-slate-400">
+                            Belum ada rincian anggaran. Tambahkan belanja baru melalui tombol di atas.
                         </td>
                     </tr>
                 `;
                 return;
             }
 
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/50 transition";
                 tr.id = `row-${item.id}`;
@@ -2070,6 +2267,8 @@
                 if (activeEditRowId === item.id) {
                     tr.innerHTML = `
                         ${tdCheckbox}
+                        <!-- Kolom No Statis saat edit -->
+                        <td class="p-3 text-center text-slate-400 font-semibold">${index + 1}</td>
                         <td class="p-3">
                             <select id="edit-kategori-${item.id}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
                                 <option value="Peralatan" ${item.kategori === 'Peralatan' ? 'selected' : ''}>Peralatan</option>
@@ -2116,6 +2315,8 @@
                 } else {
                     tr.innerHTML = `
                         ${tdCheckbox}
+                        <!-- Kolom No Statis -->
+                        <td class="p-4 text-center text-slate-400 font-semibold">${index + 1}</td>
                         <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
                         <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
                         <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
@@ -2210,13 +2411,16 @@
                     jumlah,
                     harga_satuan,
                     deskripsi,
-                    manpower_ratio
+                    manpower_ratio,
+                    status: 'Progress MR-PO',
+                    realisasi_deskripsi: ''
                 });
 
                 document.getElementById('budget-form').reset();
                 document.getElementById('input-is-asset').checked = false;
                 document.getElementById('input-manpower-ratio-hidden').value = 0;
                 toggleInputAssetInput();
+                closeBudgetFormModal();
                 
                 await fetchData();
                 await updateDashboard();
@@ -2226,13 +2430,145 @@
         }
 
         // ==========================================
+        //  REALISASI ANGGARAN LOGIC (Tambahan REQ 5)
+        // ==========================================
+        async function fetchRealisasiData() {
+            if (!activeProjectId) return;
+            try {
+                const data = await dbSelect('budgeting_project', {
+                    eq: ['project_id', activeProjectId],
+                    order: ['created_at', false]
+                });
+                localRealisasiData = data || [];
+                renderRealisasiTable(localRealisasiData);
+            } catch (err) {
+                console.error("Gagal membaca realisasi:", err);
+            }
+        }
+
+        function renderRealisasiTable(data) {
+            const tbody = document.getElementById('realisasi-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="p-8 text-center text-slate-400">
+                            Tidak ada item anggaran untuk direalisasikan. Silakan daftarkan rencana belanja terlebih dahulu.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition border-b border-slate-100";
+                
+                const total = item.jumlah * item.harga_satuan;
+                const status = item.status || 'Progress MR-PO';
+                
+                let badgeClass = '';
+                if (status === 'Cancel Item') badgeClass = 'bg-red-50 text-red-700 border-red-100';
+                else if (status === 'Progress MR-PO') badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-100';
+                else if (status === 'Progress Kirim') badgeClass = 'bg-amber-50 text-amber-700 border-amber-100';
+                else if (status === 'Done') badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+
+                tr.innerHTML = `
+                    <td class="p-4 text-center text-slate-400 font-semibold">${index + 1}</td>
+                    <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
+                    <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
+                    <td class="p-4 text-slate-600">${item.nama_vendor || '-'}</td>
+                    <td class="p-4 text-center font-bold">${item.jumlah}</td>
+                    <td class="p-4 text-right text-slate-600">${formatRupiah(item.harga_satuan)}</td>
+                    <td class="p-4 text-right font-bold text-slate-900">${formatRupiah(total)}</td>
+                    <td class="p-4 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+                            ${status}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-1">
+                            <input type="text" id="realisasi-desc-${item.id}" value="${item.realisasi_deskripsi || ''}" placeholder="No PO, Resi, catatan..." class="px-2 py-1 border border-slate-200 rounded-lg text-xs w-full focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <button onclick="saveRealisasiDeskripsi(${item.id})" class="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 rounded-lg transition" title="Simpan Catatan">
+                                <i class="fa-solid fa-save"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="inline-flex gap-1">
+                            <button onclick="updateRealisasiStatus(${item.id}, 'Cancel Item')" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded text-[10px] font-bold transition">Cancel</button>
+                            <button onclick="updateRealisasiStatus(${item.id}, 'Progress MR-PO')" class="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 rounded text-[10px] font-bold transition">MR-PO</button>
+                            <button onclick="updateRealisasiStatus(${item.id}, 'Progress Kirim')" class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded text-[10px] font-bold transition">Kirim</button>
+                            <button onclick="updateRealisasiStatus(${item.id}, 'Done')" class="px-2 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded text-[10px] font-bold transition">Done</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateRealisasiStatus(id, newStatus) {
+            try {
+                await dbUpdate('budgeting_project', { status: newStatus }, id);
+                
+                const budgetIdx = localBudgetData.findIndex(i => i.id == id);
+                if (budgetIdx !== -1) localBudgetData[budgetIdx].status = newStatus;
+
+                const realisasiIdx = localRealisasiData.findIndex(i => i.id == id);
+                if (realisasiIdx !== -1) localRealisasiData[realisasiIdx].status = newStatus;
+
+                renderRealisasiTable(localRealisasiData);
+                await updateDashboard();
+            } catch (err) {
+                alert("Gagal merubah status realisasi: " + err.message);
+            }
+        }
+
+        async function saveRealisasiDeskripsi(id) {
+            const descInput = document.getElementById(`realisasi-desc-${id}`);
+            const desc = descInput ? descInput.value.trim() : '';
+            try {
+                await dbUpdate('budgeting_project', { realisasi_deskripsi: desc }, id);
+                
+                const budgetIdx = localBudgetData.findIndex(i => i.id == id);
+                if (budgetIdx !== -1) localBudgetData[budgetIdx].realisasi_deskripsi = desc;
+
+                const realisasiIdx = localRealisasiData.findIndex(i => i.id == id);
+                if (realisasiIdx !== -1) localRealisasiData[realisasiIdx].realisasi_deskripsi = desc;
+
+                alert("Catatan tracking berhasil diperbarui.");
+                renderRealisasiTable(localRealisasiData);
+            } catch (err) {
+                alert("Gagal menyimpan deskripsi realisasi: " + err.message);
+            }
+        }
+
+        function filterRealisasiTable() {
+            const query = document.getElementById('realisasi-filter-input').value.toLowerCase().trim();
+            if (!query) {
+                renderRealisasiTable(localRealisasiData);
+                return;
+            }
+            const filtered = localRealisasiData.filter(item => {
+                return (item.nama_barang || '').toLowerCase().includes(query) ||
+                       (item.kategori || '').toLowerCase().includes(query) ||
+                       (item.nama_vendor || '').toLowerCase().includes(query) ||
+                       (item.status || '').toLowerCase().includes(query) ||
+                       (item.realisasi_deskripsi || '').toLowerCase().includes(query);
+            });
+            renderRealisasiTable(filtered);
+        }
+
+        // ==========================================
         //  MASTER PRICELIST & EXCEL OPERATIONS
         // ==========================================
         async function fetchPricelist() {
             const tbody = document.getElementById('pricelist-tbody');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="p-8 text-center text-slate-400">
+                    <td colspan="11" class="p-8 text-center text-slate-400">
                         <i class="fa-solid fa-spinner animate-spin text-lg mb-2 block"></i> Membaca Katalog Pricelist...
                     </td>
                 </tr>
@@ -2249,7 +2585,7 @@
                 populateAutocomplete(); 
             } catch (err) {
                 console.error("Gagal membaca pricelist:", err);
-                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Gagal Membaca Data Katalog.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-red-500">Gagal Membaca Data Katalog.</td></tr>`;
             }
         }
 
@@ -2284,14 +2620,14 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400">Katalog pricelist masih kosong.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-400">Katalog pricelist masih kosong.</td></tr>`;
                 return;
             }
 
             const selectAllCheckbox = document.getElementById('pl-select-all');
             if (selectAllCheckbox) selectAllCheckbox.checked = false;
 
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/50 transition";
                 tr.id = `pl-row-${item.id}`;
@@ -2301,6 +2637,8 @@
                 if (activePricelistEditRowId === item.id) {
                     tr.innerHTML = `
                         ${tdCheckbox}
+                        <!-- Kolom No Statis saat edit -->
+                        <td class="p-3 text-center text-slate-400 font-semibold">${index + 1}</td>
                         <td class="p-3">
                             <select id="edit-pl-kategori-${item.id}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
                                 <option value="Peralatan" ${item.kategori === 'Peralatan' ? 'selected' : ''}>Peralatan</option>
@@ -2348,30 +2686,33 @@
                         </td>
                     `;
                 } else {
-                    tr.innerHTML = `
-                        ${tdCheckbox}
-                        <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
-                        <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
-                        <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
-                        <td class="p-4 text-emerald-600 font-bold">${formatRupiah(item.harga_estimasi)}</td>
-                        <td class="p-4 text-xs font-semibold ${item.is_asset ? 'text-indigo-600' : 'text-slate-400'}">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
-                        <td class="p-4 text-center text-xs text-slate-500">${item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-'}</td>
-                        <td class="p-4 text-center text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">${item.manpower_ratio || '0'}</td>
-                        <td class="p-4 text-slate-500 text-xs truncate max-w-[120px]" title="${item.deskripsi || ''}">${item.deskripsi || '-'}</td>
-                        <td class="p-4 text-center flex justify-center gap-1.5">
-                            <button onclick="addPricelistToBudgetById(${item.id})" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm font-sans">
-                                <i class="fa-solid fa-cart-plus"></i> Pakai
-                            </button>
-                            <button onclick="enablePricelistEditMode(${item.id})" class="text-indigo-500 hover:text-indigo-700 transition" title="Edit Master">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </button>
-                            <button onclick="deletePricelistItem(${item.id})" class="p-1 text-red-400 hover:text-red-600 transition" title="Hapus Master">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </button>
-                        </td>
-                    `;
-                }
-                tbody.appendChild(tr);
+                   tr.innerHTML = `
+    ${tdCheckbox}
+    <!-- Kolom No Statis -->
+    <td class="p-4 text-center text-slate-400 font-semibold">${index + 1}</td>
+    <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
+    <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
+    <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
+    <td class="p-4 text-emerald-600 font-bold">${formatRupiah(item.harga_estimasi)}</td>
+    <td class="p-4 text-xs font-semibold ${item.is_asset ? 'text-indigo-600' : 'text-slate-400'}">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
+    <td class="p-4 text-center text-xs text-slate-500">${item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-'}</td>
+    <!-- REVISI: Penambahan tag penutup </td> di bawah ini -->
+    <td class="p-4 text-center text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">${item.manpower_ratio || '0'}</td>
+    <td class="p-4 text-slate-500 text-xs truncate max-w-[120px]" title="${item.deskripsi || ''}">${item.deskripsi || '-'}</td>
+    <td class="p-4 text-center flex justify-center gap-1.5">
+        <button onclick="addPricelistToBudgetById(${item.id})" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm font-sans">
+            <i class="fa-solid fa-cart-plus"></i> Pakai
+        </button>
+        <button onclick="enablePricelistEditMode(${item.id})" class="text-indigo-500 hover:text-indigo-700 transition" title="Edit Master">
+            <i class="fa-regular fa-pen-to-square"></i>
+        </button>
+        <button onclick="deletePricelistItem(${item.id})" class="p-1 text-red-400 hover:text-red-600 transition" title="Hapus Master">
+            <i class="fa-regular fa-trash-can"></i>
+        </button>
+    </td>
+`;
+} // Penutup blok else
+tbody.appendChild(tr);
             });
 
             updateSortIcons('pricelist', pricelistSortKey, pricelistSortDirection);
@@ -2443,6 +2784,7 @@
                 document.getElementById('pricelist-form').reset();
                 document.getElementById('pl-is-asset').checked = false;
                 togglePlAssetInput();
+                closePricelistFormModal();
                 await fetchPricelist();
             } catch (err) {
                 alert("Gagal menyimpan item ke pricelist: " + err.message);
@@ -2477,7 +2819,9 @@
                     jumlah: jumlah,
                     harga_satuan: match.harga_estimasi,
                     deskripsi: match.deskripsi || "",
-                    manpower_ratio: match.manpower_ratio || 0
+                    manpower_ratio: match.manpower_ratio || 0,
+                    status: 'Progress MR-PO',
+                    realisasi_deskripsi: ''
                 });
                 alert(`Berhasil menambahkan "${match.nama_barang}" ke rencana anggaran.`);
                 await fetchData();
@@ -2854,8 +3198,9 @@
             doc.setFont('helvetica', 'bold');
             doc.text(`GRAND TOTAL ANGGARAN: ${formatRupiah(totalBudget)}`, 14, 63);
 
-            const headers = [['Kategori', 'Nama Barang', 'Vendor', 'Qty', 'Satuan (Rp)', 'Total (Rp)', 'Tipe', 'Depresiasi', 'Rasio']];
-            const rows = localBudgetData.map(item => [
+            const headers = [['No', 'Kategori', 'Nama Barang', 'Vendor', 'Qty', 'Satuan (Rp)', 'Total (Rp)', 'Tipe', 'Depresiasi', 'Rasio']];
+            const rows = localBudgetData.map((item, index) => [
+                index + 1,
                 item.kategori,
                 item.nama_barang,
                 item.nama_vendor || '-',
@@ -2875,11 +3220,12 @@
                 headStyles: { fillColor: [30, 41, 59] }, 
                 styles: { fontSize: 8, cellPadding: 2.5 },
                 columnStyles: {
-                    3: { halign: 'center' },
-                    4: { halign: 'right' },
+                    0: { halign: 'center' },
+                    4: { halign: 'center' },
                     5: { halign: 'right' },
-                    7: { halign: 'center' },
-                    8: { halign: 'center' }
+                    6: { halign: 'right' },
+                    8: { halign: 'center' },
+                    9: { halign: 'center' }
                 }
             });
 
@@ -3143,7 +3489,7 @@
         }
 
         // ==========================================
-        //  PRESENTATION WINDOW & SUGGESTIONS
+        //  DASHBOARD UPDATER & REALIZATION CHART (REQ 6)
         // ==========================================
         async function updateDashboard() {
             const activeProject = localProjectsData.find(p => p.id === activeProjectId);
@@ -3156,11 +3502,14 @@
 
             const totalItems = localBudgetData ? localBudgetData.length : 0;
             const totalBudget = localBudgetData ? localBudgetData.reduce((acc, curr) => acc + (curr.jumlah * curr.harga_satuan), 0) : 0;
+            const totalQty = localBudgetData ? localBudgetData.reduce((acc, curr) => acc + (curr.jumlah || 0), 0) : 0;
 
-            document.getElementById('dash-total-items').textContent = `${totalItems} Item`;
+            document.getElementById('dash-total-items').textContent = `${totalItems} Macam`;
             document.getElementById('dash-total-budget').textContent = formatRupiah(totalBudget);
+            document.getElementById('dash-total-qty').textContent = `${totalQty} Pcs`;
 
             renderDashboardChart();
+            renderRealizationChart();
             generateAISuggestions(totalBudget);
         }
 
@@ -3192,7 +3541,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Total Estimasi Anggaran (Rp)',
+                            label: 'Estimasi Anggaran (Rp)',
                             data: costValues,
                             backgroundColor: 'rgba(99, 102, 241, 0.85)', 
                             borderColor: '#6366f1',
@@ -3280,6 +3629,80 @@
             });
         }
 
+        // Rendering Chart Realisasi (REQ 6)
+        function renderRealizationChart() {
+            const ctx = document.getElementById('realization-chart');
+            if (!ctx) return;
+
+            let counts = {
+                'Done': 0,
+                'Progress MR-PO': 0,
+                'Progress Kirim': 0,
+                'Cancel Item': 0
+            };
+
+            localBudgetData.forEach(item => {
+                const status = item.status || 'Progress MR-PO';
+                const cost = (item.jumlah || 0) * (item.harga_satuan || 0);
+                if (counts[status] !== undefined) {
+                    counts[status] += cost;
+                } else {
+                    counts['Progress MR-PO'] += cost;
+                }
+            });
+
+            const labels = Object.keys(counts);
+            const values = Object.values(counts);
+            const colors = ['#10b981', '#6366f1', '#f59e0b', '#ef4444'];
+
+            if (realizationChartInstance) {
+                realizationChartInstance.destroy();
+            }
+
+            realizationChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 9 },
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + formatRupiah(context.raw);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const totalBudget = localBudgetData.reduce((sum, i) => sum + (i.jumlah * i.harga_satuan), 0);
+            const doneBudget = counts['Done'];
+            const activeBudget = totalBudget - counts['Cancel Item'];
+            const percent = activeBudget > 0 ? ((doneBudget / activeBudget) * 100).toFixed(1) : 0;
+            
+            const badge = document.getElementById('realization-percent-badge');
+            if (badge) {
+                badge.textContent = `${percent}% Realisasi Terpenuhi`;
+            }
+        }
+
         function generateAISuggestions(totalBudget) {
             const container = document.getElementById('ai-suggestions-content');
             if (!container) return;
@@ -3301,14 +3724,14 @@
                 suggestions.push(`
                     <div class="p-3 bg-red-950/40 rounded-xl border border-red-900/40">
                         <span class="font-bold text-red-400 block mb-1">⚠️ Likuiditas Risiko Tinggi (CapEx &gt; 70%)</span>
-                        Rasio aset modal mencapai ${capexRatio.toFixed(1)}%. Pertimbangkan metode leasing peralatan untuk menjaga stabilitas arus kas.
+                        Rasio aset modal mencapai ${capexRatio.toFixed(1)}%. Pertimbangkan opsi sewa demi stabilitas likuiditas kas operasional.
                     </div>
                 `);
             } else {
                 suggestions.push(`
                     <div class="p-3 bg-indigo-950/40 rounded-xl border border-indigo-900/40">
                         <span class="font-bold text-indigo-400 block mb-1">✅ Struktur CapEx Terkendali</span>
-                        Porsi alokasi aset modal terhitung sehat di tingkat ${capexRatio.toFixed(1)}%, menandakan porsi kas operasional habis pakai (OpEx) berada dalam batas wajar.
+                        Porsi alokasi aset modal sehat di tingkat ${capexRatio.toFixed(1)}%, rasio anggaran operasional berada dalam ambang batas aman.
                     </div>
                 `);
             }
@@ -3319,14 +3742,14 @@
                     suggestions.push(`
                         <div class="p-3 bg-amber-950/40 rounded-xl border border-amber-900/40">
                             <span class="font-bold text-amber-400 block mb-1">🚨 Kritis APD / Safety Karyawan</span>
-                            Workspace diatur memiliki ${activeProject.manpower_count} manpower, namun tidak ditemukan item belanja keselamatan berkategori APD. Segera daftarkan helm atau rompi safety.
+                            Workspace mendeteksi ${activeProject.manpower_count} personel tanpa pengadaan Alat Pelindung Diri (APD) keselamatan kerja. Mohon lakukan pengecekan ulang.
                         </div>
                     `);
                 } else {
                     suggestions.push(`
                         <div class="p-3 bg-emerald-950/40 rounded-xl border border-emerald-100/40">
                             <span class="font-bold text-emerald-400 block mb-1">🛡️ Perlindungan APD Terintegrasi</span>
-                            Item pengadaan APD terdeteksi di dalam anggaran dan terintegrasi dengan rasio manpower opening proyek.
+                            Item APD keselamatan kerja teridentifikasi dan telah disinkronisasikan secara dinamis dengan parameter headcount personel.
                         </div>
                     `);
                 }
@@ -3352,13 +3775,173 @@
                 suggestions.push(`
                     <div class="p-3 bg-amber-950/40 rounded-xl border border-amber-900/40">
                         <span class="font-bold text-amber-400 block mb-1">⚠️ Dominasi Vendor (${topVendor})</span>
-                        Lebih dari ${topVendorRatio.toFixed(1)}% anggaran terpusat pada satu rekanan penyedia jasa. Disarankan melakukan penawaran pembanding demi memitigasi risiko.
+                        Sebanyak ${topVendorRatio.toFixed(1)}% anggaran terikat pada satu penyedia tunggal. Disarankan melakukan pembandingan penawaran alternatif.
                     </div>
                 `);
             }
 
             suggestions.forEach(html => container.insertAdjacentHTML('beforeend', html));
         }
+
+        // ==========================================
+        //  KPI DETAILS MODAL RENDERING (REQ 2)
+        // ==========================================
+        function openKpiDetail(type) {
+            const titleEl = document.getElementById('kpi-detail-title');
+            const contentEl = document.getElementById('kpi-detail-content');
+            if (!titleEl || !contentEl) return;
+
+            const activeProject = localProjectsData.find(p => p.id === activeProjectId);
+            const projectName = activeProject ? activeProject.name : '-';
+
+            if (type === 'project') {
+                titleEl.innerHTML = `<i class="fa-solid fa-folder text-indigo-600"></i> Detail Proyek Aktif`;
+                contentEl.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 py-1.5 border-b"><strong>Nama Proyek:</strong> <span>${projectName}</span></div>
+                        <div class="grid grid-cols-2 py-1.5 border-b"><strong>Status Default:</strong> <span>${activeProject?.is_default ? 'Ya (Default Workspace)' : 'Tidak'}</span></div>
+                        <div class="grid grid-cols-2 py-1.5 border-b"><strong>Otomatisasi Manpower:</strong> <span>${activeProject?.manpower_enabled ? 'Aktif' : 'Tidak Aktif'}</span></div>
+                        <div class="grid grid-cols-2 py-1.5 border-b"><strong>Jumlah Manpower:</strong> <span>${activeProject?.manpower_count || 1} Orang</span></div>
+                        <div class="grid grid-cols-2 py-1.5"><strong>Dibuat Tanggal:</strong> <span>${activeProject ? new Date(activeProject.created_at).toLocaleString('id-ID') : '-'}</span></div>
+                    </div>
+                `;
+            } else if (type === 'budget') {
+                titleEl.innerHTML = `<i class="fa-solid fa-wallet text-emerald-600"></i> Distribusi Rencana Anggaran`;
+                let catList = '';
+                const categories = {};
+                let total = 0;
+                localBudgetData.forEach(i => {
+                    const cost = i.jumlah * i.harga_satuan;
+                    categories[i.kategori] = (categories[i.kategori] || 0) + cost;
+                    total += cost;
+                });
+                for (let cat in categories) {
+                    const cost = categories[cat];
+                    const percent = total > 0 ? ((cost / total) * 100).toFixed(1) : 0;
+                    catList += `
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <span class="font-bold">${cat}</span>
+                            <span class="text-slate-700">${formatRupiah(cost)} (${percent}%)</span>
+                        </div>
+                    `;
+                }
+                contentEl.innerHTML = `
+                    <p class="text-xs text-slate-500 mb-3">Rincian pengeluaran per kategori anggaran belanja proyek:</p>
+                    <div class="space-y-1">${catList || '<p class="text-center italic py-4">Belum ada rincian belanja.</p>'}</div>
+                    <div class="flex justify-between font-extrabold text-base pt-3 text-slate-900">
+                        <span>GRAND TOTAL:</span>
+                        <span>${formatRupiah(total)}</span>
+                    </div>
+                `;
+            } else if (type === 'items') {
+                titleEl.innerHTML = `<i class="fa-solid fa-box-open text-indigo-600"></i> Daftar Item Belanja Anggaran`;
+                let itemList = '';
+                localBudgetData.forEach((i, index) => {
+                    itemList += `
+                        <tr class="border-b hover:bg-slate-50">
+                            <td class="p-2 text-center text-xs text-slate-400">${index+1}</td>
+                            <td class="p-2 text-xs font-semibold">${i.nama_barang}</td>
+                            <td class="p-2 text-xs">${i.kategori}</td>
+                            <td class="p-2 text-xs text-right">${i.jumlah} Unit</td>
+                        </tr>
+                    `;
+                });
+                contentEl.innerHTML = `
+                    <div class="max-h-[50vh] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-[10px] uppercase font-bold text-slate-500">
+                                    <th class="p-2 text-center w-[10%]">No</th>
+                                    <th class="p-2 w-[50%]">Nama Barang</th>
+                                    <th class="p-2 w-[25%]">Kategori</th>
+                                    <th class="p-2 text-right w-[15%]">Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemList || '<tr><td colspan="4" class="p-4 text-center italic">Tidak ada item belanja.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (type === 'qty') {
+                titleEl.innerHTML = `<i class="fa-solid fa-boxes-stacked text-amber-600"></i> Detail Kuantitas Total Barang (Pcs)`;
+                let totalQty = localBudgetData.reduce((sum, i) => sum + (i.jumlah || 0), 0);
+                let itemList = '';
+                const sortedByQty = [...localBudgetData].sort((a,b) => b.jumlah - a.jumlah);
+                sortedByQty.forEach((i, index) => {
+                    itemList += `
+                        <tr class="border-b hover:bg-slate-50">
+                            <td class="p-2 text-center text-xs text-slate-400">${index+1}</td>
+                            <td class="p-2 text-xs font-semibold">${i.nama_barang}</td>
+                            <td class="p-2 text-xs text-right font-bold text-amber-600">${i.jumlah} Pcs/Unit</td>
+                        </tr>
+                    `;
+                });
+                contentEl.innerHTML = `
+                    <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl text-center mb-4">
+                        <span class="text-xs text-amber-700 uppercase tracking-wider block font-bold">Total Akumulasi Unit Fisik</span>
+                        <span class="text-2xl font-black text-amber-600">${totalQty} Pcs</span>
+                    </div>
+                    <div class="max-h-[40vh] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-[10px] uppercase font-bold text-slate-500">
+                                    <th class="p-2 text-center w-[10%]">No</th>
+                                    <th class="p-2 w-[65%]">Nama Barang</th>
+                                    <th class="p-2 text-right w-[25%]">Kuantitas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemList || '<tr><td colspan="3" class="p-4 text-center italic">Tidak ada kuantitas terdeteksi.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (type === 'manpower') {
+                titleEl.innerHTML = `<i class="fa-solid fa-users text-amber-600"></i> Analisa Alokasi Manpower`;
+                const automatedItems = localBudgetData.filter(i => parseFloat(i.manpower_ratio) > 0);
+                let listHtml = '';
+                automatedItems.forEach((i, index) => {
+                    listHtml += `
+                        <tr class="border-b hover:bg-slate-50">
+                            <td class="p-2 text-center text-xs text-slate-400">${index+1}</td>
+                            <td class="p-2 text-xs font-semibold">${i.nama_barang}</td>
+                            <td class="p-2 text-xs text-center font-bold text-indigo-600">${i.manpower_ratio}</td>
+                            <td class="p-2 text-xs text-right font-bold">${i.jumlah} Unit</td>
+                        </tr>
+                    `;
+                });
+                contentEl.innerHTML = `
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between py-1 border-b text-xs"><span>Otomatisasi Status:</span> <span class="font-bold text-indigo-600">${activeProject?.manpower_enabled ? 'AKTIF' : 'NON-AKTIF'}</span></div>
+                        <div class="flex justify-between py-1 border-b text-xs"><span>Kapasitas Personil:</span> <span class="font-bold text-slate-800">${activeProject?.manpower_count || 1} Orang</span></div>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-700 mb-2">Item Terpengaruh Rasio Manpower:</p>
+                    <div class="max-h-[35vh] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-[10px] uppercase font-bold text-slate-500">
+                                    <th class="p-2 text-center w-[10%]">No</th>
+                                    <th class="p-2 w-[55%]">Nama Barang</th>
+                                    <th class="p-2 text-center w-[15%]">Rasio</th>
+                                    <th class="p-2 text-right w-[20%]">Hasil Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${listHtml || '<tr><td colspan="4" class="p-4 text-center italic">Tidak ada item yang terikat rasio manpower.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            document.getElementById('kpi-detail-modal').classList.remove('hidden');
+        }
+
+        function closeKpiDetail() {
+            document.getElementById('kpi-detail-modal').classList.add('hidden');
+        }
     </script>
 </body>
 </html>
+`
