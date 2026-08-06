@@ -462,7 +462,7 @@
             </div>
         </div>
 
-        <!-- ==================== MENU 3: REALISASI ANGGARAN (NEW MENU) ==================== -->
+        <!-- ==================== MENU 3: REALISASI ANGGARAN (SORTER UPDATE) ==================== -->
         <div id="screen-realisasi" class="hidden flex flex-col gap-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
@@ -476,18 +476,33 @@
                     </div>
                 </div>
                 
+                <!-- HEADER INTERAKTIF SORTIR BARU -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[1200px]">
                         <thead>
                             <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
                                 <th class="p-4 w-[4%] text-center">No</th>
-                                <th class="p-4 w-[11%]">Kategori</th>
-                                <th class="p-4 w-[18%]">Nama Barang</th>
-                                <th class="p-4 w-[10%]">Vendor</th>
-                                <th class="p-4 w-[5%] text-center">Qty</th>
-                                <th class="p-4 w-[8%] text-right">Satuan (Rp)</th>
-                                <th class="p-4 w-[10%] text-right">Total (Rp)</th>
-                                <th class="p-4 w-[12%] text-center">Status Realisasi</th>
+                                <th class="p-4 w-[11%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('kategori')">
+                                    Kategori <i id="sort-realisasi-icon-kategori" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[18%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('nama_barang')">
+                                    Nama Barang <i id="sort-realisasi-icon-nama_barang" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[10%] cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('nama_vendor')">
+                                    Vendor <i id="sort-realisasi-icon-nama_vendor" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[5%] text-center cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('jumlah')">
+                                    Qty <i id="sort-realisasi-icon-jumlah" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[8%] text-right cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('harga_satuan')">
+                                    Satuan (Rp) <i id="sort-realisasi-icon-harga_satuan" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[10%] text-right cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('total_harga')">
+                                    Total (Rp) <i id="sort-realisasi-icon-total_harga" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
+                                <th class="p-4 w-[12%] text-center cursor-pointer select-none hover:bg-slate-100 transition" onclick="sortRealisasiTable('status')">
+                                    Status Realisasi <i id="sort-realisasi-icon-status" class="fa-solid fa-sort text-[10px] opacity-30 ml-1"></i>
+                                </th>
                                 <th class="p-4 w-[16%]">No PO / Resi / Keterangan</th>
                                 <th class="p-4 w-[16%] text-center">Ubah Status</th>
                             </tr>
@@ -1111,7 +1126,7 @@
         </div>
     </div>
 
-    <!-- ==================== POPUP MODAL DYNAMIC KPI DETAILS (NEW FEATURE) ==================== -->
+    <!-- ==================== POPUP MODAL DYNAMIC KPI DETAILS ==================== -->
     <div id="kpi-detail-modal" class="fixed inset-0 bg-slate-900/80 z-[95] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden text-slate-800">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -1129,7 +1144,7 @@
         </div>
     </div>
 
-    <!-- ==================== POPUP MODAL FORM TAMBAH BUDGET (NEW VIEW MODAL) ==================== -->
+    <!-- ==================== POPUP MODAL FORM TAMBAH BUDGET ==================== -->
     <div id="budget-form-modal" class="fixed inset-0 bg-slate-900/80 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full text-slate-800 relative max-h-[90vh] overflow-y-auto">
             <button onclick="closeBudgetFormModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition">
@@ -1199,7 +1214,7 @@
         </div>
     </div>
 
-    <!-- ==================== POPUP MODAL FORM TAMBAH MASTER PRICELIST (NEW VIEW MODAL) ==================== -->
+    <!-- ==================== POPUP MODAL FORM TAMBAH MASTER PRICELIST ==================== -->
     <div id="pricelist-form-modal" class="fixed inset-0 bg-slate-900/80 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full text-slate-800 relative max-h-[90vh] overflow-y-auto">
             <button onclick="closePricelistFormModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition">
@@ -1304,6 +1319,10 @@
         let budgetSortDirection = 'desc';
         let pricelistSortKey = 'nama_barang';
         let pricelistSortDirection = 'asc';
+        
+        // State Parameter Fitur Sortir Baru untuk Realisasi
+        let realisasiSortKey = 'created_at';
+        let realisasiSortDirection = 'desc';
 
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth(); 
@@ -1691,7 +1710,7 @@
         }
 
         // ==========================================
-        //  MODAL VISIBILITY CONTROL (TAMBAHAN REQ 7)
+        //  MODAL VISIBILITY CONTROL
         // ==========================================
         function openBudgetFormModal() {
             document.getElementById('budget-form-modal').classList.remove('hidden');
@@ -1734,7 +1753,7 @@
         }
 
         // ==========================================
-        //  CRUD PROYEK & DUPLICATE (REQ 4)
+        //  CRUD PROYEK & DUPLICATE
         // ==========================================
         async function fetchProjectsAndDefault() {
             try {
@@ -2032,7 +2051,7 @@
         }
 
         // ==========================================
-        //  TAB SYSTEM CONTROL (MODIFIED)
+        //  TAB SYSTEM CONTROL
         // ==========================================
         function switchTab(tab) {
             currentTab = tab;
@@ -2214,7 +2233,7 @@
         }
 
         // ==========================================
-        //  CRUD RENCANA ANGGARAN (DETIL SETIAP KOLOM & NO)
+        //  CRUD RENCANA ANGGARAN
         // ==========================================
         async function fetchData() {
             if (!activeProjectId) return;
@@ -2235,6 +2254,10 @@
             } catch (err) {
                 console.error("Gagal membaca data anggaran:", err);
             }
+        }
+
+        function updateSummaryCards(data) {
+            // Placeholder helper untuk sinkronisasi nilai eksternal jika diperlukan
         }
 
         function renderTable(data) {
@@ -2267,7 +2290,6 @@
                 if (activeEditRowId === item.id) {
                     tr.innerHTML = `
                         ${tdCheckbox}
-                        <!-- Kolom No Statis saat edit -->
                         <td class="p-3 text-center text-slate-400 font-semibold">${index + 1}</td>
                         <td class="p-3">
                             <select id="edit-kategori-${item.id}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
@@ -2315,7 +2337,6 @@
                 } else {
                     tr.innerHTML = `
                         ${tdCheckbox}
-                        <!-- Kolom No Statis -->
                         <td class="p-4 text-center text-slate-400 font-semibold">${index + 1}</td>
                         <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
                         <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
@@ -2430,7 +2451,7 @@
         }
 
         // ==========================================
-        //  REALISASI ANGGARAN LOGIC (Tambahan REQ 5)
+        //  REALISASI ANGGARAN LOGIC (SORTING COMPLETE)
         // ==========================================
         async function fetchRealisasiData() {
             if (!activeProjectId) return;
@@ -2440,10 +2461,46 @@
                     order: ['created_at', false]
                 });
                 localRealisasiData = data || [];
+                applyRealisasiSortSilent(); // Pengurutan State Sebelum Rendering
                 renderRealisasiTable(localRealisasiData);
             } catch (err) {
                 console.error("Gagal membaca realisasi:", err);
             }
+        }
+
+        // Fungsi Handler Event Klik Sortir Kolom Realisasi
+        function sortRealisasiTable(key) {
+            if (realisasiSortKey === key) {
+                realisasiSortDirection = realisasiSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                realisasiSortKey = key;
+                realisasiSortDirection = 'asc';
+            }
+            applyRealisasiSortSilent();
+            renderRealisasiTable(localRealisasiData);
+        }
+
+        // Algoritma Pengurutan Array di Belakang Layar
+        function applyRealisasiSortSilent() {
+            localRealisasiData.sort((a, b) => {
+                let valA = a[realisasiSortKey];
+                let valB = b[realisasiSortKey];
+                
+                if (realisasiSortKey === 'total_harga') {
+                    valA = (a.jumlah || 0) * (a.harga_satuan || 0);
+                    valB = (b.jumlah || 0) * (b.harga_satuan || 0);
+                } else if (realisasiSortKey === 'jumlah' || realisasiSortKey === 'harga_satuan') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                } else {
+                    valA = valA ? valA.toString().toLowerCase() : '';
+                    valB = valB ? valB.toString().toLowerCase() : '';
+                }
+                
+                if (valA < valB) return realisasiSortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return realisasiSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
         }
 
         function renderRealisasiTable(data) {
@@ -2507,6 +2564,9 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Update Ikon UI Sorter Realisasi
+            updateSortIcons('realisasi', realisasiSortKey, realisasiSortDirection);
         }
 
         async function updateRealisasiStatus(id, newStatus) {
@@ -2519,6 +2579,7 @@
                 const realisasiIdx = localRealisasiData.findIndex(i => i.id == id);
                 if (realisasiIdx !== -1) localRealisasiData[realisasiIdx].status = newStatus;
 
+                applyRealisasiSortSilent();
                 renderRealisasiTable(localRealisasiData);
                 await updateDashboard();
             } catch (err) {
@@ -2539,6 +2600,7 @@
                 if (realisasiIdx !== -1) localRealisasiData[realisasiIdx].realisasi_deskripsi = desc;
 
                 alert("Catatan tracking berhasil diperbarui.");
+                applyRealisasiSortSilent();
                 renderRealisasiTable(localRealisasiData);
             } catch (err) {
                 alert("Gagal menyimpan deskripsi realisasi: " + err.message);
@@ -2637,7 +2699,6 @@
                 if (activePricelistEditRowId === item.id) {
                     tr.innerHTML = `
                         ${tdCheckbox}
-                        <!-- Kolom No Statis saat edit -->
                         <td class="p-3 text-center text-slate-400 font-semibold">${index + 1}</td>
                         <td class="p-3">
                             <select id="edit-pl-kategori-${item.id}" class="w-full px-2 py-1 border rounded text-xs focus:outline-none">
@@ -2686,33 +2747,31 @@
                         </td>
                     `;
                 } else {
-                   tr.innerHTML = `
-    ${tdCheckbox}
-    <!-- Kolom No Statis -->
-    <td class="p-4 text-center text-slate-400 font-semibold">${index + 1}</td>
-    <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
-    <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
-    <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
-    <td class="p-4 text-emerald-600 font-bold">${formatRupiah(item.harga_estimasi)}</td>
-    <td class="p-4 text-xs font-semibold ${item.is_asset ? 'text-indigo-600' : 'text-slate-400'}">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
-    <td class="p-4 text-center text-xs text-slate-500">${item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-'}</td>
-    <!-- REVISI: Penambahan tag penutup </td> di bawah ini -->
-    <td class="p-4 text-center text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">${item.manpower_ratio || '0'}</td>
-    <td class="p-4 text-slate-500 text-xs truncate max-w-[120px]" title="${item.deskripsi || ''}">${item.deskripsi || '-'}</td>
-    <td class="p-4 text-center flex justify-center gap-1.5">
-        <button onclick="addPricelistToBudgetById(${item.id})" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm font-sans">
-            <i class="fa-solid fa-cart-plus"></i> Pakai
-        </button>
-        <button onclick="enablePricelistEditMode(${item.id})" class="text-indigo-500 hover:text-indigo-700 transition" title="Edit Master">
-            <i class="fa-regular fa-pen-to-square"></i>
-        </button>
-        <button onclick="deletePricelistItem(${item.id})" class="p-1 text-red-400 hover:text-red-600 transition" title="Hapus Master">
-            <i class="fa-regular fa-trash-can"></i>
-        </button>
-    </td>
-`;
-} // Penutup blok else
-tbody.appendChild(tr);
+                    tr.innerHTML = `
+                        ${tdCheckbox}
+                        <td class="p-4 text-center text-slate-400 font-semibold">${index + 1}</td>
+                        <td class="p-4 font-semibold text-slate-800">${item.kategori}</td>
+                        <td class="p-4 text-slate-700 font-medium">${item.nama_barang}</td>
+                        <td class="p-4 text-slate-600 font-medium">${item.nama_vendor || '-'}</td>
+                        <td class="p-4 text-emerald-600 font-bold">${formatRupiah(item.harga_estimasi)}</td>
+                        <td class="p-4 text-xs font-semibold ${item.is_asset ? 'text-indigo-600' : 'text-slate-400'}">${item.is_asset ? 'Aset' : 'Habis Pakai'}</td>
+                        <td class="p-4 text-center text-xs text-slate-500">${item.is_asset ? `${item.masa_depresiasi || 5} Thn` : '-'}</td>
+                        <td class="p-4 text-center text-xs font-bold text-indigo-600 bg-indigo-50/50 rounded-lg">${item.manpower_ratio || '0'}</td>
+                        <td class="p-4 text-slate-500 text-xs truncate max-w-[120px]" title="${item.deskripsi || ''}">${item.deskripsi || '-'}</td>
+                        <td class="p-4 text-center flex justify-center gap-1.5">
+                            <button onclick="addPricelistToBudgetById(${item.id})" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm font-sans">
+                                <i class="fa-solid fa-cart-plus"></i> Pakai
+                            </button>
+                            <button onclick="enablePricelistEditMode(${item.id})" class="text-indigo-500 hover:text-indigo-700 transition" title="Edit Master">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deletePricelistItem(${item.id})" class="p-1 text-red-400 hover:text-red-600 transition" title="Hapus Master">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
             });
 
             updateSortIcons('pricelist', pricelistSortKey, pricelistSortDirection);
@@ -2842,7 +2901,7 @@ tbody.appendChild(tr);
         }
 
         // ==========================================
-        //  PENGURUTAN (SORT) TABEL
+        //  PENGURUTAN (SORT) TABEL UTAMA & PRICELIST
         // ==========================================
         function sortBudgetTable(key) {
             if (budgetSortKey === key) {
@@ -2903,19 +2962,33 @@ tbody.appendChild(tr);
             });
         }
 
+        // INTEGRASI IKON URUTAN BARU UNTUK 3 MENU
         function updateSortIcons(type, activeKey, activeDirection) {
-            const suffix = type === 'budget' ? 'sort-icon-' : 'sort-pl-icon-';
-            const keys = type === 'budget' 
-                ? ['kategori', 'nama_barang', 'nama_vendor', 'jumlah', 'harga_satuan', 'total_harga']
-                : ['kategori', 'nama_barang', 'nama_vendor', 'harga_estimasi'];
+            let suffix = 'sort-icon-';
+            let keys = [];
+            let activeColorClass = 'text-indigo-600';
+
+            if (type === 'budget') {
+                suffix = 'sort-icon-';
+                keys = ['kategori', 'nama_barang', 'nama_vendor', 'jumlah', 'harga_satuan', 'total_harga'];
+                activeColorClass = 'text-indigo-600';
+            } else if (type === 'pricelist') {
+                suffix = 'sort-pl-icon-';
+                keys = ['kategori', 'nama_barang', 'nama_vendor', 'harga_estimasi'];
+                activeColorClass = 'text-emerald-600';
+            } else if (type === 'realisasi') {
+                suffix = 'sort-realisasi-icon-';
+                keys = ['kategori', 'nama_barang', 'nama_vendor', 'jumlah', 'harga_satuan', 'total_harga', 'status'];
+                activeColorClass = 'text-purple-600';
+            }
             
             keys.forEach(k => {
                 const el = document.getElementById(`${suffix}${k}`);
                 if (el) {
                     if (k === activeKey) {
                         el.className = activeDirection === 'asc' 
-                            ? "fa-solid fa-sort-up text-[10px] opacity-100 ml-1 text-indigo-600" 
-                            : "fa-solid fa-sort-down text-[10px] opacity-100 ml-1 text-indigo-600";
+                            ? `fa-solid fa-sort-up text-[10px] opacity-100 ml-1 ${activeColorClass}` 
+                            : `fa-solid fa-sort-down text-[10px] opacity-100 ml-1 ${activeColorClass}`;
                     } else {
                         el.className = "fa-solid fa-sort text-[10px] opacity-30 ml-1";
                     }
@@ -3489,7 +3562,7 @@ tbody.appendChild(tr);
         }
 
         // ==========================================
-        //  DASHBOARD UPDATER & REALIZATION CHART (REQ 6)
+        //  DASHBOARD UPDATER & REALIZATION CHART
         // ==========================================
         async function updateDashboard() {
             const activeProject = localProjectsData.find(p => p.id === activeProjectId);
@@ -3629,7 +3702,6 @@ tbody.appendChild(tr);
             });
         }
 
-        // Rendering Chart Realisasi (REQ 6)
         function renderRealizationChart() {
             const ctx = document.getElementById('realization-chart');
             if (!ctx) return;
@@ -3784,7 +3856,7 @@ tbody.appendChild(tr);
         }
 
         // ==========================================
-        //  KPI DETAILS MODAL RENDERING (REQ 2)
+        //  KPI DETAILS MODAL RENDERING
         // ==========================================
         function openKpiDetail(type) {
             const titleEl = document.getElementById('kpi-detail-title');
@@ -3944,4 +4016,3 @@ tbody.appendChild(tr);
     </script>
 </body>
 </html>
-`
